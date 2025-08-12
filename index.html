@@ -379,7 +379,7 @@
         // Usamos 'default-app-id' e '{}' como fallback para permitir execução fora do Canvas
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? initialAuthToken : null; // Corrigido aqui
 
         // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
@@ -644,7 +644,7 @@
             showModal(`Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm', async () => {
                 try {
                     await deleteDoc(doc(getEmployeesCollectionRef(), employeeId));
-                    showModal('Funcionário removido da nuvem! �', 'alert');
+                    showModal('Funcionário removido da nuvem! 😢', 'alert');
                     loadEmployees();
                 } catch (error) {
                     console.error('Erro ao apagar funcionário:', error);
