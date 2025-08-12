@@ -169,6 +169,13 @@
             background-color: #e9ecef;
             border-radius: 8px;
         }
+        #userIdDisplay {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 10px;
+            word-break: break-all; /* Garante que o ID completo seja visível */
+        }
 
         /* Estilos do Modal Customizado */
         .modal-overlay {
@@ -331,6 +338,7 @@
     
     <p id="employeeCounter">Total de funcionários na nuvem: 0 ☁️</p>
     <ul id="employeeList"></ul>
+    <p id="userIdDisplay">Usuário: Carregando...</p>
 
     <!-- Modal Customizado -->
     <div id="customModal" class="modal-overlay">
@@ -352,8 +360,6 @@
         import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variáveis globais de configuração do Canvas (fornecidas pelo ambiente)
-        // Usamos 'default-app-id' e '{}' como fallback se as variáveis não estiverem definidas
-        // Isso é importante para que o código possa ser executado em ambientes fora do Canvas também
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -418,8 +424,10 @@
 
         // --- Autenticação Firebase e Inicialização do Firestore ---
         onAuthStateChanged(auth, async (user) => {
+            const userIdDisplay = document.getElementById('userIdDisplay');
             if (user) {
                 userId = user.uid;
+                userIdDisplay.textContent = `Usuário: ${userId}`;
                 console.log("Usuário autenticado:", userId);
             } else {
                 console.log("Nenhum usuário logado. Tentando login...");
@@ -428,17 +436,20 @@
                         // Tenta autenticar com o token customizado fornecido
                         await signInWithCustomToken(auth, initialAuthToken);
                         userId = auth.currentUser.uid;
+                        userIdDisplay.textContent = `Usuário: ${userId}`;
                         console.log("Login com token customizado bem-sucedido:", userId);
                     } else {
                         // Se não houver token, faz login anonimamente
                         await signInAnonymously(auth);
                         userId = auth.currentUser.uid;
+                        userIdDisplay.textContent = `Usuário: ${userId}`;
                         console.log("Login anônimo bem-sucedido:", userId);
                     }
                 } catch (error) {
                     console.error("Erro durante a autenticação:", error);
                     showModal('Erro ao autenticar. Por favor, tente novamente.', 'alert');
                     userId = null; // Garante que userId seja nulo se a autenticação falhar
+                    userIdDisplay.textContent = 'Usuário: Erro de autenticação';
                 }
             }
 
@@ -457,20 +468,28 @@
         // --- Funções da Aplicação ---
 
         /**
+         * Retorna a referência da coleção de funcionários para o usuário atual.
+         * @returns {firebase.firestore.CollectionReference}
+         */
+        function getEmployeesCollectionRef() {
+            // A coleção agora é específica do usuário dentro do diretório artifacts do Canvas
+            return collection(db, `artifacts/${appId}/users/${userId}/employees`);
+        }
+
+        /**
          * Verifica se uma matrícula já existe no Firestore.
          * @param {string} employeeId - A matrícula a ser verificada.
          * @param {string} [excludeDocId] - O ID do documento a ser excluído da verificação (para edições).
          * @returns {Promise<boolean>} - True se a matrícula for duplicada, false caso contrário.
          */
         async function checkDuplicateEmployeeId(employeeId, excludeDocId = null) {
-            if (!db) return false; // Garante que db está inicializado
+            if (!db || !userId) return false;
             try {
-                // Caminho da coleção corrigido para 'employees'
-                const q = query(collection(db, 'employees'),
+                const q = query(getEmployeesCollectionRef(),
                                 where('employeeId', '==', employeeId));
                 const querySnapshot = await getDocs(q);
                 if (excludeDocId) {
-                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId);
+                    return querySnapshot.docs.some(d => d.id !== excludeDocId);
                 }
                 return !querySnapshot.empty;
             } catch (error) {
@@ -486,14 +505,13 @@
          * @returns {Promise<boolean>} - True se o nome for duplicado, false caso contrário.
          */
         async function checkDuplicateEmployeeName(name, excludeDocId = null) {
-            if (!db) return false;
+            if (!db || !userId) return false;
             try {
-                // Caminho da coleção corrigido para 'employees'
-                const q = query(collection(db, 'employees'),
+                const q = query(getEmployeesCollectionRef(),
                                 where('name', '==', name.toUpperCase()));
                 const querySnapshot = await getDocs(q);
                 if (excludeDocId) {
-                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId);
+                    return querySnapshot.docs.some(d => d.id !== excludeDocId);
                 }
                 return !querySnapshot.empty;
             } catch (error) {
@@ -538,13 +556,11 @@
 
                     if (editingEmployeeId) {
                         // Atualiza funcionário existente
-                        // Caminho da coleção corrigido para 'employees'
-                        await updateDoc(doc(db, 'employees', editingEmployeeId), employeeData);
-                        showModal('Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
+                        await updateDoc(doc(getEmployeesCollectionRef(), editingEmployeeId), employeeData);
+                        showModal('Funcionário atualizado na nuvem! Tá voando alto! �', 'alert');
                     } else {
                         // Adiciona novo funcionário
-                        // Caminho da coleção corrigido para 'employees'
-                        await addDoc(collection(db, 'employees'), employeeData);
+                        await addDoc(getEmployeesCollectionRef(), employeeData);
                         showModal('Funcionário salvo na nuvem! Tá voando alto! 🚀', 'alert');
                     }
 
@@ -606,8 +622,7 @@
             // Usa o modal customizado para confirmação
             showModal(`Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm', async () => {
                 try {
-                    // Caminho da coleção corrigido para 'employees'
-                    await deleteDoc(doc(db, 'employees', employeeId));
+                    await deleteDoc(doc(getEmployeesCollectionRef(), employeeId));
                     showModal('Funcionário removido da nuvem! 😢', 'alert');
                     loadEmployees();
                 } catch (error) {
@@ -649,9 +664,7 @@
                 ul.innerHTML = ''; // Limpa a lista existente
 
                 // Consulta Firestore: ordena por employeeId e name
-                // Caminho da coleção corrigido para 'employees'
-                const employeesCollectionRef = collection(db, 'employees');
-                const q = query(employeesCollectionRef,
+                const q = query(getEmployeesCollectionRef(),
                                 orderBy('employeeId'), // Primeiro ordena por matrícula
                                 orderBy('name'));      // Depois ordena por nome
 
