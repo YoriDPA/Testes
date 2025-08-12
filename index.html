@@ -225,6 +225,12 @@
         .modal-buttons #modalConfirmBtn:hover {
             background-color: #218838;
         }
+        .modal-buttons #modalOkBtn {
+            background-color: #007bff;
+        }
+        .modal-buttons #modalOkBtn:hover {
+            background-color: #0056b3;
+        }
         .modal-buttons #modalCancelBtn {
             background-color: #6c757d;
         }
@@ -343,9 +349,11 @@
         // Importa as funções necessárias do Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variáveis globais de configuração do Canvas (fornecidas pelo ambiente)
+        // Usamos 'default-app-id' e '{}' como fallback se as variáveis não estiverem definidas
+        // Isso é importante para que o código possa ser executado em ambientes fora do Canvas também
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -457,7 +465,8 @@
         async function checkDuplicateEmployeeId(employeeId, excludeDocId = null) {
             if (!db) return false; // Garante que db está inicializado
             try {
-                const q = query(collection(db, `artifacts/${appId}/users/${userId}/employees`),
+                // Caminho da coleção corrigido para 'employees'
+                const q = query(collection(db, 'employees'),
                                 where('employeeId', '==', employeeId));
                 const querySnapshot = await getDocs(q);
                 if (excludeDocId) {
@@ -479,7 +488,8 @@
         async function checkDuplicateEmployeeName(name, excludeDocId = null) {
             if (!db) return false;
             try {
-                const q = query(collection(db, `artifacts/${appId}/users/${userId}/employees`),
+                // Caminho da coleção corrigido para 'employees'
+                const q = query(collection(db, 'employees'),
                                 where('name', '==', name.toUpperCase()));
                 const querySnapshot = await getDocs(q);
                 if (excludeDocId) {
@@ -528,11 +538,13 @@
 
                     if (editingEmployeeId) {
                         // Atualiza funcionário existente
-                        await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/employees`, editingEmployeeId), employeeData);
+                        // Caminho da coleção corrigido para 'employees'
+                        await updateDoc(doc(db, 'employees', editingEmployeeId), employeeData);
                         showModal('Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
                     } else {
                         // Adiciona novo funcionário
-                        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/employees`), employeeData);
+                        // Caminho da coleção corrigido para 'employees'
+                        await addDoc(collection(db, 'employees'), employeeData);
                         showModal('Funcionário salvo na nuvem! Tá voando alto! 🚀', 'alert');
                     }
 
@@ -594,7 +606,8 @@
             // Usa o modal customizado para confirmação
             showModal(`Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm', async () => {
                 try {
-                    await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/employees`, employeeId));
+                    // Caminho da coleção corrigido para 'employees'
+                    await deleteDoc(doc(db, 'employees', employeeId));
                     showModal('Funcionário removido da nuvem! 😢', 'alert');
                     loadEmployees();
                 } catch (error) {
@@ -636,8 +649,9 @@
                 ul.innerHTML = ''; // Limpa a lista existente
 
                 // Consulta Firestore: ordena por employeeId e name
-                // Nota: Firestore não permite 'OR' em queries. Filtragem de busca é feita no cliente.
-                const q = query(collection(db, `artifacts/${appId}/users/${userId}/employees`),
+                // Caminho da coleção corrigido para 'employees'
+                const employeesCollectionRef = collection(db, 'employees');
+                const q = query(employeesCollectionRef,
                                 orderBy('employeeId'), // Primeiro ordena por matrícula
                                 orderBy('name'));      // Depois ordena por nome
 
