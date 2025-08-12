@@ -3,91 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mineiro - Gerenciar Funcionários na Nuvem</title>
+    <title>MemoBuddy - Gerenciar Funcionários na Nuvem</title>
     <style>
-        /* Estilos gerais */
+        /* Estilos gerais do corpo da página */
         body {
-            font-family: 'Inter', sans-serif; /* Usando Inter para uma aparência moderna */
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 10px;
-            background-color: #f0f0f0;
-            box-sizing: border-box;
-            color: #333;
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif; /* Fonte moderna para melhor legibilidade */
+            max-width: 800px; /* Largura máxima para o conteúdo central */
+            margin: 20px auto; /* Centraliza o conteúdo na página */
+            padding: 10px; /* Espaçamento interno */
+            background-color: #f0f0f0; /* Cor de fundo suave */
+            box-sizing: border-box; /* Garante que padding e borda não aumentem o tamanho total */
+            color: #333; /* Cor do texto principal */
+            line-height: 1.6; /* Altura da linha para melhor leitura */
         }
+        /* Estilo do título principal */
         h1 {
             color: #333;
             text-align: center;
             font-size: 2.2rem;
             margin-bottom: 30px;
             font-weight: bold;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.5px; /* Espaçamento entre letras */
         }
+        /* Estilo dos subtítulos de seção */
         h3 {
             color: #555;
             margin-bottom: 15px;
             font-size: 1.3rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #eee; /* Linha de separação */
             padding-bottom: 8px;
         }
+        /* Estilo para contêineres de formulário e pesquisa */
         .form-container, .search-container {
-            background: white;
+            background: white; /* Fundo branco para os contêineres */
             padding: 20px;
-            border-radius: 12px; /* Cantos mais arredondados */
+            border-radius: 12px; /* Cantos arredondados */
             margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Sombra mais suave */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Sombra suave para profundidade */
             border: 1px solid #e0e0e0; /* Borda sutil */
         }
+        /* Estilo para campos de entrada, seletores e botões */
         input, select, button {
             padding: 12px 15px;
             margin: 8px 0;
-            border-radius: 8px; /* Cantos arredondados para inputs/buttons */
+            border-radius: 8px;
             border: 1px solid #ddd;
-            width: 100%;
+            width: 100%; /* Ocupa a largura total do contêiner */
             box-sizing: border-box;
             font-size: 1.05rem;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transição suave ao focar */
         }
+        /* Efeito ao focar em campos de entrada e seletores */
         input:focus, select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-            outline: none;
+            border-color: #007bff; /* Borda azul vibrante */
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25); /* Sombra de foco */
+            outline: none; /* Remove o contorno padrão */
         }
+        /* Estilo específico para o seletor (dropdown) */
         select {
             cursor: pointer;
-            appearance: none; /* Remove seta padrão em alguns browsers */
+            appearance: none; /* Remove a seta padrão em alguns navegadores */
+            /* Adiciona uma seta SVG personalizada */
             background-image: url('data:image/svg+xml;utf8,<svg fill="%23666666" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
             background-repeat: no-repeat;
             background-position: right 10px center;
             background-size: 20px;
         }
+        /* Estilo geral para todos os botões */
         button {
             color: white;
             border: none;
             cursor: pointer;
             padding: 14px 20px;
-            min-height: 48px; /* Garante tamanho de toque adequado */
+            min-height: 48px; /* Garante tamanho de toque adequado para mobile */
             font-weight: bold;
-            text-transform: uppercase;
+            text-transform: uppercase; /* Texto em maiúsculas */
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Sombra para botões */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Transições suaves */
         }
+        /* Efeito ao passar o mouse sobre os botões */
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transform: translateY(-2px); /* Efeito de "subir" */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Sombra mais intensa */
         }
 
-        /* Botões específicos */
+        /* Estilos específicos para os botões do formulário */
         #formButton {
-            background-color: #28a745;
+            background-color: #28a745; /* Cor verde para salvar/atualizar */
         }
         #formButton:hover {
             background-color: #218838;
         }
         #listAllButton {
-            background-color: #007bff;
+            background-color: #007bff; /* Cor azul para listar todos */
             width: auto;
             min-width: 150px;
         }
@@ -95,42 +104,45 @@
             background-color: #0056b3;
         }
         #cancelEditButton {
-            background-color: #6c757d;
+            background-color: #6c757d; /* Cor cinza para cancelar edição */
             margin-top: 10px;
         }
         #cancelEditButton:hover {
             background-color: #5a6268;
         }
+        /* Estilo para o botão de apagar item da lista */
         .delete-button {
-            background-color: #dc3545;
+            background-color: #dc3545; /* Cor vermelha para apagar */
             padding: 8px 15px;
             font-size: 0.9rem;
             min-height: auto;
             border-radius: 6px;
-            box-shadow: none;
+            box-shadow: none; /* Remove sombra extra */
         }
         .delete-button:hover {
             background-color: #c82333;
-            transform: translateY(0);
+            transform: translateY(0); /* Remove o efeito de subir */
             box-shadow: none;
         }
 
+        /* Estilo para o contêiner de pesquisa */
         .search-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px; /* Espaçamento maior */
+            flex-wrap: wrap; /* Permite que os itens quebrem linha */
+            gap: 15px; /* Espaçamento entre os itens */
             align-items: center;
         }
         .search-container input {
-            flex-grow: 1; /* Permite que o input cresça */
+            flex-grow: 1; /* Permite que o input cresça para preencher o espaço */
             margin: 0; /* Remove margens extras */
         }
         .search-container button {
             margin: 0; /* Remove margens extras */
         }
 
+        /* Estilo da lista de funcionários */
         #employeeList {
-            list-style: none;
+            list-style: none; /* Remove marcadores de lista */
             padding: 0;
             margin-top: 20px;
         }
@@ -141,24 +153,27 @@
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             font-size: 1rem;
-            word-break: break-word;
+            word-break: break-word; /* Quebra palavras longas */
             cursor: pointer;
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between; /* Espaçamento entre o texto e o botão */
             align-items: center;
             border: 1px solid #f0f0f0;
             transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
+        /* Efeito ao passar o mouse sobre os itens da lista */
         #employeeList li:hover {
             background-color: #f8f9fa;
             border-color: #d0d0d0;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
+        /* Estilo para item de lista selecionado para edição */
         #employeeList li.selected {
             background-color: #e8f4ff !important;
             border: 2px solid #007bff !important;
             box-shadow: 0 4px 15px rgba(0,123,255,0.2);
         }
+        /* Estilo para o contador de funcionários */
         #employeeCounter {
             text-align: center;
             font-weight: bold;
@@ -169,6 +184,7 @@
             background-color: #e9ecef;
             border-radius: 8px;
         }
+        /* Estilo para exibir o ID do usuário (para depuração e informação) */
         #userIdDisplay {
             text-align: center;
             font-size: 0.8rem;
@@ -177,25 +193,25 @@
             word-break: break-all; /* Garante que o ID completo seja visível */
         }
 
-        /* Estilos do Modal Customizado */
+        /* --- Estilos do Modal Customizado --- */
         .modal-overlay {
-            position: fixed;
+            position: fixed; /* Fixa o modal na tela */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.6); /* Fundo escuro semitransparente */
             display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            justify-content: center; /* Centraliza horizontalmente */
+            align-items: center; /* Centraliza verticalmente */
+            z-index: 1000; /* Garante que o modal esteja acima de outros elementos */
+            opacity: 0; /* Começa invisível */
+            visibility: hidden; /* Esconde o modal para interação */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* Transição suave */
         }
         .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            opacity: 1; /* Torna-se visível */
+            visibility: visible; /* Habilita a interação */
         }
         .modal-content {
             background-color: white;
@@ -205,11 +221,11 @@
             text-align: center;
             max-width: 400px;
             width: 90%;
-            transform: translateY(-20px);
+            transform: translateY(-20px); /* Começa um pouco acima para o efeito de entrada */
             transition: transform 0.3s ease;
         }
         .modal-overlay.active .modal-content {
-            transform: translateY(0);
+            transform: translateY(0); /* Move para a posição final */
         }
         .modal-message {
             font-size: 1.15rem;
@@ -226,27 +242,27 @@
             text-transform: none;
             font-weight: normal;
         }
+        /* Cores específicas para os botões do modal */
         .modal-buttons #modalConfirmBtn {
-            background-color: #28a745;
+            background-color: #28a745; /* Verde para confirmar */
         }
         .modal-buttons #modalConfirmBtn:hover {
             background-color: #218838;
         }
         .modal-buttons #modalOkBtn {
-            background-color: #007bff;
+            background-color: #007bff; /* Azul para OK */
         }
         .modal-buttons #modalOkBtn:hover {
             background-color: #0056b3;
         }
         .modal-buttons #modalCancelBtn {
-            background-color: #6c757d;
+            background-color: #6c757d; /* Cinza para cancelar */
         }
         .modal-buttons #modalCancelBtn:hover {
             background-color: #5a6268;
         }
 
-
-        /* Media Queries para responsividade */
+        /* --- Media Queries para responsividade (adaptação a diferentes tamanhos de ecrã) --- */
         @media (max-width: 600px) {
             body {
                 margin: 10px;
@@ -272,21 +288,21 @@
                 padding: 10px;
             }
             .search-container {
-                flex-direction: column; /* Coluna em telas menores */
+                flex-direction: column; /* Em colunas em ecrãs pequenos */
                 align-items: stretch;
             }
             .search-container input, .search-container button {
-                width: 100%; /* Ocupa toda a largura */
+                width: 100%; /* Ocupa a largura total */
             }
             #employeeList li {
                 font-size: 0.9rem;
                 padding: 12px 15px;
-                flex-direction: column; /* Coloca botão abaixo em telas pequenas */
+                flex-direction: column; /* Botão abaixo em ecrãs pequenos */
                 align-items: flex-start;
                 gap: 8px;
             }
             .delete-button {
-                width: 100%; /* Botão de apagar ocupa toda a largura */
+                width: 100%; /* Botão de apagar ocupa a largura total */
                 margin-top: 5px;
             }
             #employeeCounter {
@@ -308,7 +324,7 @@
                 font-size: 1.5rem;
             }
             input, select, button {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -338,9 +354,9 @@
     
     <p id="employeeCounter">Total de funcionários na nuvem: 0 ☁️</p>
     <ul id="employeeList"></ul>
-    <p id="userIdDisplay">Usuário: Carregando...</p>
+    <p id="userIdDisplay">Utilizador: Carregando...</p> <!-- Exibe o ID do utilizador -->
 
-    <!-- Modal Customizado -->
+    <!-- Modal Customizado (substitui alert() e confirm()) -->
     <div id="customModal" class="modal-overlay">
         <div class="modal-content">
             <p id="modalMessage" class="modal-message"></p>
@@ -352,7 +368,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDK (Modular) -->
+    <!-- Firebase SDK (Modular - Importação de módulos ES6) -->
     <script type="module">
         // Importa as funções necessárias do Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -360,6 +376,7 @@
         import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variáveis globais de configuração do Canvas (fornecidas pelo ambiente)
+        // Usamos 'default-app-id' e '{}' como fallback para permitir execução fora do Canvas
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -367,94 +384,98 @@
         // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        let db; // Será inicializado após a autenticação
+        let db; // A instância do Firestore será inicializada após a autenticação
 
-        // Variáveis de estado
-        let editingEmployeeId = null; // Rastreia o ID do funcionário em edição
-        let userId = null; // ID do usuário logado
+        // Variáveis de estado para a aplicação
+        let editingEmployeeId = null; // Rastreia o ID do funcionário atualmente em edição
+        let userId = null; // Armazena o ID do utilizador autenticado
 
-        // --- Funções do Modal Customizado ---
+        // --- Funções para o Modal Customizado (Pop-up de mensagens) ---
         const customModal = document.getElementById('customModal');
         const modalMessage = document.getElementById('modalMessage');
         const modalOkBtn = document.getElementById('modalOkBtn');
         const modalConfirmBtn = document.getElementById('modalConfirmBtn');
         const modalCancelBtn = document.getElementById('modalCancelBtn');
 
-        let onModalConfirmCallback = null;
+        let onModalConfirmCallback = null; // Callback para a ação de confirmação do modal
 
         /**
          * Exibe o modal customizado com uma mensagem e botões específicos.
          * @param {string} message - A mensagem a ser exibida no modal.
-         * @param {'alert'|'confirm'} type - O tipo de modal ('alert' ou 'confirm').
-         * @param {function} [onConfirm] - Callback para ser executado se o usuário confirmar (apenas para type 'confirm').
+         * @param {'alert'|'confirm'} type - O tipo de modal ('alert' para OK, 'confirm' para Confirmar/Cancelar).
+         * @param {function} [onConfirm] - Callback a ser executado se o utilizador clicar em 'Confirmar' (apenas para type 'confirm').
          */
         function showModal(message, type, onConfirm = null) {
-            modalMessage.textContent = message;
+            modalMessage.textContent = message; // Define a mensagem do modal
+            // Esconde todos os botões por padrão
             modalOkBtn.style.display = 'none';
             modalConfirmBtn.style.display = 'none';
             modalCancelBtn.style.display = 'none';
 
-            onModalConfirmCallback = onConfirm;
+            onModalConfirmCallback = onConfirm; // Armazena o callback de confirmação
 
             if (type === 'alert') {
-                modalOkBtn.style.display = 'inline-block';
+                modalOkBtn.style.display = 'inline-block'; // Exibe apenas o botão 'OK'
             } else if (type === 'confirm') {
-                modalConfirmBtn.style.display = 'inline-block';
+                modalConfirmBtn.style.display = 'inline-block'; // Exibe 'Confirmar' e 'Cancelar'
                 modalCancelBtn.style.display = 'inline-block';
             }
 
-            customModal.classList.add('active');
+            customModal.classList.add('active'); // Ativa a exibição do modal
         }
 
-        /** Oculta o modal customizado. */
+        /** Oculta o modal customizado e limpa o callback de confirmação. */
         function hideModal() {
-            customModal.classList.remove('active');
-            onModalConfirmCallback = null;
+            customModal.classList.remove('active'); // Desativa a exibição do modal
+            onModalConfirmCallback = null; // Limpa o callback
         }
 
-        // Adiciona event listeners aos botões do modal
-        modalOkBtn.onclick = hideModal;
-        modalCancelBtn.onclick = hideModal;
+        // Adiciona event listeners aos botões do modal para interatividade
+        modalOkBtn.onclick = hideModal; // Ao clicar em OK, o modal fecha
+        modalCancelBtn.onclick = hideModal; // Ao clicar em Cancelar, o modal fecha
         modalConfirmBtn.onclick = () => {
             if (onModalConfirmCallback) {
-                onModalConfirmCallback();
+                onModalConfirmCallback(); // Executa o callback de confirmação, se existir
             }
-            hideModal();
+            hideModal(); // Fecha o modal após a confirmação
         };
 
         // --- Autenticação Firebase e Inicialização do Firestore ---
+        // Observa mudanças no estado de autenticação do utilizador
         onAuthStateChanged(auth, async (user) => {
             const userIdDisplay = document.getElementById('userIdDisplay');
             if (user) {
+                // Se o utilizador está logado, define o userId
                 userId = user.uid;
-                userIdDisplay.textContent = `Usuário: ${userId}`;
-                console.log("Usuário autenticado:", userId);
+                userIdDisplay.textContent = `Utilizador: ${userId}`;
+                console.log("Utilizador autenticado:", userId);
             } else {
-                console.log("Nenhum usuário logado. Tentando login...");
+                // Se nenhum utilizador está logado, tenta fazer login
+                console.log("Nenhum utilizador logado. A tentar login...");
                 try {
                     if (initialAuthToken) {
-                        // Tenta autenticar com o token customizado fornecido
+                        // Tenta autenticar com o token customizado fornecido pelo ambiente Canvas
                         await signInWithCustomToken(auth, initialAuthToken);
                         userId = auth.currentUser.uid;
-                        userIdDisplay.textContent = `Usuário: ${userId}`;
+                        userIdDisplay.textContent = `Utilizador: ${userId}`;
                         console.log("Login com token customizado bem-sucedido:", userId);
                     } else {
-                        // Se não houver token, faz login anonimamente
+                        // Se não houver token, faz login anonimamente (para acesso básico)
                         await signInAnonymously(auth);
                         userId = auth.currentUser.uid;
-                        userIdDisplay.textContent = `Usuário: ${userId}`;
-                        console.log("Login anônimo bem-sucedido:", userId);
+                        userIdDisplay.textContent = `Utilizador: ${userId}`;
+                        console.log("Login anónimo bem-sucedido:", userId);
                     }
                 } catch (error) {
                     console.error("Erro durante a autenticação:", error);
                     showModal('Erro ao autenticar. Por favor, tente novamente.', 'alert');
                     userId = null; // Garante que userId seja nulo se a autenticação falhar
-                    userIdDisplay.textContent = 'Usuário: Erro de autenticação';
+                    userIdDisplay.textContent = 'Utilizador: Erro de autenticação';
                 }
             }
 
             if (userId) {
-                // Inicializa o Firestore APÓS a autenticação
+                // Inicializa o Firestore APÓS a autenticação estar completa
                 db = getFirestore(app);
                 // Carrega os funcionários apenas se o Firebase estiver pronto e autenticado
                 loadEmployees();
@@ -468,12 +489,12 @@
         // --- Funções da Aplicação ---
 
         /**
-         * Retorna a referência da coleção de funcionários para o usuário atual.
+         * Retorna a referência da coleção de funcionários.
+         * A coleção agora aponta para 'employees' na raiz, conforme o seu setup.
          * @returns {firebase.firestore.CollectionReference}
          */
         function getEmployeesCollectionRef() {
-            // A coleção agora é específica do usuário dentro do diretório artifacts do Canvas
-            return collection(db, `artifacts/${appId}/users/${userId}/employees`);
+            return collection(db, 'employees');
         }
 
         /**
@@ -483,7 +504,7 @@
          * @returns {Promise<boolean>} - True se a matrícula for duplicada, false caso contrário.
          */
         async function checkDuplicateEmployeeId(employeeId, excludeDocId = null) {
-            if (!db || !userId) return false;
+            if (!db) return false; // Garante que db está inicializado
             try {
                 const q = query(getEmployeesCollectionRef(),
                                 where('employeeId', '==', employeeId));
@@ -505,7 +526,7 @@
          * @returns {Promise<boolean>} - True se o nome for duplicado, false caso contrário.
          */
         async function checkDuplicateEmployeeName(name, excludeDocId = null) {
-            if (!db || !userId) return false;
+            if (!db) return false;
             try {
                 const q = query(getEmployeesCollectionRef(),
                                 where('name', '==', name.toUpperCase()));
@@ -524,8 +545,8 @@
          * Adiciona um novo funcionário ou atualiza um existente no Firestore.
          */
         async function saveEmployee() {
-            if (!db || !userId) {
-                showModal('Erro: Firebase não inicializado ou usuário não autenticado.', 'alert');
+            if (!db) { // Não é necessário verificar userId aqui, pois o Firebase já está autenticado
+                showModal('Erro: Firebase não inicializado.', 'alert');
                 return;
             }
 
@@ -557,7 +578,7 @@
                     if (editingEmployeeId) {
                         // Atualiza funcionário existente
                         await updateDoc(doc(getEmployeesCollectionRef(), editingEmployeeId), employeeData);
-                        showModal('Funcionário atualizado na nuvem! Tá voando alto! �', 'alert');
+                        showModal('Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
                     } else {
                         // Adiciona novo funcionário
                         await addDoc(getEmployeesCollectionRef(), employeeData);
@@ -614,8 +635,8 @@
          * @param {string} employeeName - O nome do funcionário para a mensagem de confirmação.
          */
         async function deleteEmployee(employeeId, employeeName) {
-            if (!db || !userId) {
-                showModal('Erro: Firebase não inicializado ou usuário não autenticado.', 'alert');
+            if (!db) {
+                showModal('Erro: Firebase não inicializado.', 'alert');
                 return;
             }
 
@@ -623,7 +644,7 @@
             showModal(`Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm', async () => {
                 try {
                     await deleteDoc(doc(getEmployeesCollectionRef(), employeeId));
-                    showModal('Funcionário removido da nuvem! 😢', 'alert');
+                    showModal('Funcionário removido da nuvem! �', 'alert');
                     loadEmployees();
                 } catch (error) {
                     console.error('Erro ao apagar funcionário:', error);
@@ -652,8 +673,8 @@
          * @param {string} [queryText=''] - O texto de busca para filtrar os funcionários.
          */
         async function loadEmployees(queryText = '') {
-            if (!db || !userId) {
-                // A autenticação está sendo processada, ou falhou. A mensagem será tratada pelo onAuthStateChanged.
+            if (!db) {
+                // O Firestore ainda não foi inicializado. A autenticação está sendo processada.
                 return;
             }
 
@@ -672,11 +693,11 @@
                 console.log('Documentos encontrados:', snapshot.size);
 
                 let employees = [];
-                snapshot.forEach(doc => {
-                    let employee = { id: doc.id, ...doc.data() };
+                snapshot.forEach(d => {
+                    let employee = { id: d.id, ...d.data() };
                     // Garante que os campos existem e são válidos
                     if (!employee.employeeId || !employee.name || !employee.role) {
-                        console.warn(`Documento ${doc.id} possui campos ausentes ou inválidos, ignorando:`, employee);
+                        console.warn(`Documento ${d.id} possui campos ausentes ou inválidos, ignorando:`, employee);
                         return;
                     }
 
