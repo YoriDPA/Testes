@@ -375,11 +375,20 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Variáveis globais de configuração do Canvas (fornecidas pelo ambiente)
-        // Usamos 'default-app-id' e '{}' como fallback para permitir execução fora do Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? initialAuthToken : null; // Corrigido aqui
+        // Configuração do teu projeto Firebase (HARDCODED PARA GARANTIR CONEXÃO COM SEU PROJETO)
+        // ESTES VALORES VIERAM DO SEU CÓDIGO ORIGINAL
+        const firebaseConfig = {
+            apiKey: "AIzaSyC35sX_nm4lX4oa1tpNSuZTee-kcb0Dsfk",
+            authDomain: "memobuddy-8aa1d.firebaseapp.com",
+            projectId: "memobuddy-8aa1d",
+            storageBucket: "memobuddy-8aa1d.appspot.com",
+            messagingSenderId: "43382520454",
+            appId: "1:43382520454:web:1bdabfb207240291906f07"
+        };
+        
+        // A variável __initial_auth_token do Canvas será usada se disponível para autenticação
+        // Corrigido: `initialAuthToken` agora referencia corretamente `__initial_auth_token`
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
 
         // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
