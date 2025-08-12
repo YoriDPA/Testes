@@ -3,609 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MemoBuddy - Gerenciar Funcionários na Nuvem</title>
+    <title>Mineiro - Gerenciar Funcionários na Nuvem</title>
+    <!-- Incluindo Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração da fonte Inter (opcional, mas boa prática) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Estilos gerais do corpo da página */
         body {
-            font-family: 'Inter', sans-serif; /* Fonte moderna para melhor legibilidade */
-            max-width: 800px; /* Largura máxima para o conteúdo central */
-            margin: 20px auto; /* Centraliza o conteúdo na página */
-            padding: 10px; /* Espaçamento interno */
-            background-color: #f0f0f0; /* Cor de fundo suave */
-            box-sizing: border-box; /* Garante que padding e borda não aumentem o tamanho total */
-            color: #333; /* Cor do texto principal */
-            line-height: 1.6; /* Altura da linha para melhor leitura */
+            font-family: 'Inter', sans-serif;
         }
-        /* Estilo do título principal */
-        h1 {
-            color: #333;
-            text-align: center;
-            font-size: 2.2rem;
-            margin-bottom: 30px;
-            font-weight: bold;
-            letter-spacing: -0.5px; /* Espaçamento entre letras */
-        }
-        /* Estilo dos subtítulos de seção */
-        h3 {
-            color: #555;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-            border-bottom: 1px solid #eee; /* Linha de separação */
-            padding-bottom: 8px;
-        }
-        /* Estilo para contêineres de formulário e pesquisa */
-        .form-container, .search-container {
-            background: white; /* Fundo branco para os contêineres */
-            padding: 20px;
-            border-radius: 12px; /* Cantos arredondados */
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Sombra suave para profundidade */
-            border: 1px solid #e0e0e0; /* Borda sutil */
-        }
-        /* Estilo para campos de entrada, seletores e botões */
-        input, select, button {
-            padding: 12px 15px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            width: 100%; /* Ocupa a largura total do contêiner */
-            box-sizing: border-box;
-            font-size: 1.05rem;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transição suave ao focar */
-        }
-        /* Efeito ao focar em campos de entrada e seletores */
-        input:focus, select:focus {
-            border-color: #007bff; /* Borda azul vibrante */
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.25); /* Sombra de foco */
-            outline: none; /* Remove o contorno padrão */
-        }
-        /* Estilo específico para o seletor (dropdown) */
-        select {
-            cursor: pointer;
-            appearance: none; /* Remove a seta padrão em alguns navegadores */
-            /* Adiciona uma seta SVG personalizada */
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23666666" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 20px;
-        }
-        /* Estilo geral para todos os botões */
-        button {
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 14px 20px;
-            min-height: 48px; /* Garante tamanho de toque adequado para mobile */
-            font-weight: bold;
-            text-transform: uppercase; /* Texto em maiúsculas */
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Sombra para botões */
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Transições suaves */
-        }
-        /* Efeito ao passar o mouse sobre os botões */
-        button:hover {
-            transform: translateY(-2px); /* Efeito de "subir" */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Sombra mais intensa */
-        }
-
-        /* Estilos específicos para os botões do formulário */
-        #formButton {
-            background-color: #28a745; /* Cor verde para salvar/atualizar */
-        }
-        #formButton:hover {
-            background-color: #218838;
-        }
-        #listAllButton {
-            background-color: #007bff; /* Cor azul para listar todos */
-            width: auto;
-            min-width: 150px;
-        }
-        #listAllButton:hover {
-            background-color: #0056b3;
-        }
-        #cancelEditButton {
-            background-color: #6c757d; /* Cor cinza para cancelar edição */
-            margin-top: 10px;
-        }
-        #cancelEditButton:hover {
-            background-color: #5a6268;
-        }
-        /* Estilo para o botão de apagar item da lista */
-        .delete-button {
-            background-color: #dc3545; /* Cor vermelha para apagar */
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            min-height: auto;
-            border-radius: 6px;
-            box-shadow: none; /* Remove sombra extra */
-        }
-        .delete-button:hover {
-            background-color: #c82333;
-            transform: translateY(0); /* Remove o efeito de subir */
-            box-shadow: none;
-        }
-
-        /* Estilo para o contêiner de pesquisa */
-        .search-container {
-            display: flex;
-            flex-wrap: wrap; /* Permite que os itens quebrem linha */
-            gap: 15px; /* Espaçamento entre os itens */
-            align-items: center;
-        }
-        .search-container input {
-            flex-grow: 1; /* Permite que o input cresça para preencher o espaço */
-            margin: 0; /* Remove margens extras */
-        }
-        .search-container button {
-            margin: 0; /* Remove margens extras */
-        }
-
-        /* Estilo da lista de funcionários */
-        #employeeList {
-            list-style: none; /* Remove marcadores de lista */
-            padding: 0;
-            margin-top: 20px;
-        }
-        #employeeList li {
-            background: white;
-            padding: 15px 20px;
-            margin: 10px 0;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            font-size: 1rem;
-            word-break: break-word; /* Quebra palavras longas */
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between; /* Espaçamento entre o texto e o botão */
-            align-items: center;
-            border: 1px solid #f0f0f0;
-            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
-        }
-        /* Efeito ao passar o mouse sobre os itens da lista */
-        #employeeList li:hover {
-            background-color: #f8f9fa;
-            border-color: #d0d0d0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        /* Estilo para item de lista selecionado para edição */
-        #employeeList li.selected {
-            background-color: #e8f4ff !important;
-            border: 2px solid #007bff !important;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.2);
-        }
-        /* Estilo para o contador de funcionários */
-        #employeeCounter {
-            text-align: center;
-            font-weight: bold;
-            color: #555;
-            margin-top: 15px;
-            font-size: 1.1rem;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 8px;
-        }
-        /* Estilo para exibir o ID do usuário (para depuração e informação) */
-        #userIdDisplay {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #888;
-            margin-top: 10px;
-            word-break: break-all; /* Garante que o ID completo seja visível */
-        }
-
-        /* --- Estilos do Modal Customizado --- */
-        .modal-overlay {
-            position: fixed; /* Fixa o modal na tela */
-            top: 0;
+        /* Estilos para o modal de mensagem */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; /* Fica por cima de tudo */
+            z-index: 1000; /* Alto z-index para garantir que fique na frente */
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Fundo escuro semitransparente */
-            display: flex;
-            justify-content: center; /* Centraliza horizontalmente */
-            align-items: center; /* Centraliza verticalmente */
-            z-index: 1000; /* Garante que o modal esteja acima de outros elementos */
-            opacity: 0; /* Começa invisível */
-            visibility: hidden; /* Esconde o modal para interação */
-            transition: opacity 0.3s ease, visibility 0.3s ease; /* Transição suave */
-        }
-        .modal-overlay.active {
-            opacity: 1; /* Torna-se visível */
-            visibility: visible; /* Habilita a interação */
+            top: 0;
+            width: 100%; /* Largura total */
+            height: 100%; /* Altura total */
+            overflow: auto; /* Habilita rolagem se o conteúdo for muito grande */
+            background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+            justify-content: center;
+            align-items: center;
         }
         .modal-content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            text-align: center;
-            max-width: 400px;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 90%;
-            transform: translateY(-20px); /* Começa um pouco acima para o efeito de entrada */
-            transition: transform 0.3s ease;
+            max-width: 400px;
+            text-align: center;
         }
-        .modal-overlay.active .modal-content {
-            transform: translateY(0); /* Move para a posição final */
+        .modal-content h3 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
-        .modal-message {
-            font-size: 1.15rem;
-            margin-bottom: 25px;
-            color: #444;
+        .modal-content p {
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: #4a5568;
         }
         .modal-buttons button {
-            width: auto;
-            min-width: 100px;
-            margin: 0 10px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
-            text-transform: none;
-            font-weight: normal;
+            @apply px-4 py-2 rounded-lg text-white font-medium transition-colors duration-200;
         }
-        /* Cores específicas para os botões do modal */
-        .modal-buttons #modalConfirmBtn {
-            background-color: #28a745; /* Verde para confirmar */
+        .modal-buttons .confirm-button {
+            @apply bg-blue-500 hover:bg-blue-600 mr-2;
         }
-        .modal-buttons #modalConfirmBtn:hover {
-            background-color: #218838;
+        .modal-buttons .cancel-button {
+            @apply bg-gray-400 hover:bg-gray-500;
         }
-        .modal-buttons #modalOkBtn {
-            background-color: #007bff; /* Azul para OK */
-        }
-        .modal-buttons #modalOkBtn:hover {
-            background-color: #0056b3;
-        }
-        .modal-buttons #modalCancelBtn {
-            background-color: #6c757d; /* Cinza para cancelar */
-        }
-        .modal-buttons #modalCancelBtn:hover {
-            background-color: #5a6268;
-        }
-
-        /* --- Media Queries para responsividade (adaptação a diferentes tamanhos de ecrã) --- */
-        @media (max-width: 600px) {
-            body {
-                margin: 10px;
-                padding: 5px;
-            }
-            h1 {
-                font-size: 1.8rem;
-                margin-bottom: 20px;
-            }
-            h3 {
-                font-size: 1.1rem;
-            }
-            .form-container, .search-container {
-                padding: 15px;
-            }
-            input, select, button {
-                font-size: 0.95rem;
-                padding: 10px;
-                margin: 6px 0;
-            }
-            #listAllButton, #cancelEditButton {
-                min-width: 120px;
-                padding: 10px;
-            }
-            .search-container {
-                flex-direction: column; /* Em colunas em ecrãs pequenos */
-                align-items: stretch;
-            }
-            .search-container input, .search-container button {
-                width: 100%; /* Ocupa a largura total */
-            }
-            #employeeList li {
-                font-size: 0.9rem;
-                padding: 12px 15px;
-                flex-direction: column; /* Botão abaixo em ecrãs pequenos */
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .delete-button {
-                width: 100%; /* Botão de apagar ocupa a largura total */
-                margin-top: 5px;
-            }
-            #employeeCounter {
-                font-size: 1rem;
-                padding: 8px;
-            }
-            .modal-content {
-                padding: 20px;
-            }
-            .modal-message {
-                font-size: 1rem;
-            }
-            .modal-buttons button {
-                margin: 5px;
-            }
-        }
-        @media (max-width: 400px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-            input, select, button {
-                font-size: 0.85rem;
-            }
+        .modal-buttons .ok-button {
+            @apply bg-green-500 hover:bg-green-600;
         }
     </style>
 </head>
-<body>
-    <h1>MemoBuddy - Teus Funcionários na Nuvem! ☁️😎</h1>
-    
-    <div class="form-container">
-        <h3 id="formTitle">Adicionar Funcionário</h3>
-        <input type="text" id="employeeName" placeholder="Nome do funcionário">
-        <input type="text" id="employeeId" placeholder="Matrícula">
-        <select id="employeeRole">
-            <option value="" disabled selected>Selecione o cargo</option>
-            <option value="Coletor">Coletor</option>
-            <option value="Gari">Gari</option>
-            <option value="Motorista">Motorista</option>
-        </select>
-        <button id="formButton" onclick="saveEmployee()">Salvar na Nuvem</button>
-        <button id="cancelEditButton" style="display: none;" onclick="cancelEdit()">Cancelar</button>
-    </div>
-    
-    <div class="search-container">
-        <h3>Procurar Funcionário</h3>
-        <input type="text" id="searchInput" placeholder="Digite nome, matrícula ou cargo" onkeyup="searchEmployees()">
-        <button id="listAllButton" onclick="listAllEmployees()">Listar Todos</button>
-    </div>
-    
-    <p id="employeeCounter">Total de funcionários na nuvem: 0 ☁️</p>
-    <ul id="employeeList"></ul>
-    <p id="userIdDisplay">Utilizador: Carregando...</p> <!-- Exibe o ID do utilizador -->
+<body class="bg-gray-100 p-4 sm:p-6 md:p-8 flex flex-col items-center min-h-screen">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6 text-center leading-tight">
+        Funcionários em Nuvem <span class="text-blue-600">☁️😎</span>
+    </h1>
 
-    <!-- Modal Customizado (substitui alert() e confirm()) -->
-    <div id="customModal" class="modal-overlay">
+    <!-- Exibição do User ID para debugging e múltiplos usuários -->
+    <div id="userIdDisplay" class="text-sm text-gray-600 mb-4 text-center break-all">
+        ID do Usuário: Carregando...
+    </div>
+    
+    <div class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg mb-6">
+        <h3 id="formTitle" class="text-xl font-semibold text-gray-700 mb-4">Adicionar Funcionário</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="employeeName" placeholder="Nome do funcionário" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <input type="text" id="employeeId" placeholder="Matrícula" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <select id="employeeRole" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
+                <option value="" disabled selected>Selecione o cargo</option>
+                <option value="Coletor">Coletor</option>
+                <option value="Gari">Gari</option>
+                <option value="Motorista">Motorista</option>
+            </select>
+            <select id="employeeStatus" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
+                <option value="ativo" selected>Ativo</option>
+                <option value="inativo">Inativo</option>
+            </select>
+        </div>
+        <button id="formButton" onclick="saveEmployee()" class="mt-5 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Salvar na Nuvem</button>
+        <button id="cancelEditButton" style="display: none;" onclick="cancelEdit()" class="mt-3 w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Cancelar</button>
+    </div>
+    
+    <div class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg mb-6">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Procurar Funcionário</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" id="searchInput" placeholder="Nome, matrícula ou cargo" onkeyup="searchEmployees()" class="md:col-span-3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <select id="roleFilter" onchange="filterByRole()" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
+                <option value="">Todos os Cargos</option>
+                <option value="Coletor">Coletor</option>
+                <option value="Gari">Gari</option>
+                <option value="Motorista">Motorista</option>
+            </select>
+            <select id="statusFilter" onchange="filterByStatus()" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
+                <option value="">Todos os Status</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+            </select>
+            <button id="listAllButton" onclick="listAllEmployees()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Listar Todos</button>
+        </div>
+    </div>
+    
+    <p id="employeeCounter" class="text-lg font-semibold text-gray-700 mb-4">Total de funcionários na nuvem: 0 <span class="text-blue-600">☁️</span></p>
+    <ul id="employeeList" class="w-full max-w-2xl list-none p-0">
+        <!-- Itens da lista de funcionários serão inseridos aqui -->
+    </ul>
+
+    <!-- Modal para mensagens e confirmações -->
+    <div id="appModal" class="modal">
         <div class="modal-content">
-            <p id="modalMessage" class="modal-message"></p>
-            <div class="modal-buttons">
-                <button id="modalConfirmBtn" style="display: none;">Confirmar</button>
-                <button id="modalOkBtn" style="display: none;">OK</button>
-                <button id="modalCancelBtn" style="display: none;">Cancelar</button>
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <div id="modalButtons" class="modal-buttons">
+                <!-- Botões serão adicionados dinamicamente -->
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK (Modular - Importação de módulos ES6) -->
+    <!-- Firebase SDK - Versão modular (v9+) -->
     <script type="module">
-        // Importa as funções necessárias do Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, addDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, onSnapshot, FieldValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-        // Configuração do teu projeto Firebase (HARDCODED PARA GARANTIR CONEXÃO COM SEU PROJETO)
-        // ESTES VALORES VIERAM DO SEU CÓDIGO ORIGINAL
-        const firebaseConfig = {
-            apiKey: "AIzaSyC35sX_nm4lX4oa1tpNSuZTee-kcb0Dsfk",
-            authDomain: "memobuddy-8aa1d.firebaseapp.com",
-            projectId: "memobuddy-8aa1d",
-            storageBucket: "memobuddy-8aa1d.appspot.com",
-            messagingSenderId: "43382520454",
-            appId: "1:43382520454:web:1bdabfb207240291906f07"
-        };
-        
-        // A variável __initial_auth_token do Canvas será usada se disponível para autenticação
-        // Corrigido: `initialAuthToken` agora referencia corretamente `__initial_auth_token`
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
-        // Inicializa o Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        let db; // A instância do Firestore será inicializada após a autenticação
+        let app;
+        let db;
+        let auth;
+        let userId; // Will store the authenticated user's ID
+        let authReady = false; // Flag to indicate if authentication is ready
 
-        // Variáveis de estado para a aplicação
-        let editingEmployeeId = null; // Rastreia o ID do funcionário atualmente em edição
-        let userId = null; // Armazena o ID do utilizador autenticado
-
-        // --- Funções para o Modal Customizado (Pop-up de mensagens) ---
-        const customModal = document.getElementById('customModal');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalOkBtn = document.getElementById('modalOkBtn');
-        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        const modalCancelBtn = document.getElementById('modalCancelBtn');
-
-        let onModalConfirmCallback = null; // Callback para a ação de confirmação do modal
+        // State to track editing
+        let editingEmployeeId = null;
+        let currentEditingLi = null;
 
         /**
-         * Exibe o modal customizado com uma mensagem e botões específicos.
-         * @param {string} message - A mensagem a ser exibida no modal.
-         * @param {'alert'|'confirm'} type - O tipo de modal ('alert' para OK, 'confirm' para Confirmar/Cancelar).
-         * @param {function} [onConfirm] - Callback a ser executado se o utilizador clicar em 'Confirmar' (apenas para type 'confirm').
+         * @function showModal
+         * @description Displays a custom modal with a given title, message, and type (alert or confirm).
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The message to display in the modal.
+         * @param {'alert'|'confirm'} type - The type of modal ('alert' or 'confirm').
+         * @returns {Promise<boolean>} Resolves to true if 'OK'/'Confirm' is clicked, false if 'Cancel'.
          */
-        function showModal(message, type, onConfirm = null) {
-            modalMessage.textContent = message; // Define a mensagem do modal
-            // Esconde todos os botões por padrão
-            modalOkBtn.style.display = 'none';
-            modalConfirmBtn.style.display = 'none';
-            modalCancelBtn.style.display = 'none';
+        function showModal(title, message, type) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('appModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalMessage = document.getElementById('modalMessage');
+                const modalButtons = document.getElementById('modalButtons');
 
-            onModalConfirmCallback = onConfirm; // Armazena o callback de confirmação
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modalButtons.innerHTML = ''; // Clear existing buttons
 
-            if (type === 'alert') {
-                modalOkBtn.style.display = 'inline-block'; // Exibe apenas o botão 'OK'
-            } else if (type === 'confirm') {
-                modalConfirmBtn.style.display = 'inline-block'; // Exibe 'Confirmar' e 'Cancelar'
-                modalCancelBtn.style.display = 'inline-block';
-            }
+                if (type === 'alert') {
+                    const okButton = document.createElement('button');
+                    okButton.textContent = 'OK';
+                    okButton.className = 'ok-button';
+                    okButton.onclick = () => {
+                        modal.style.display = 'none';
+                        resolve(true);
+                    };
+                    modalButtons.appendChild(okButton);
+                } else if (type === 'confirm') {
+                    const confirmButton = document.createElement('button');
+                    confirmButton.textContent = 'Confirmar';
+                    confirmButton.className = 'confirm-button';
+                    confirmButton.onclick = () => {
+                        modal.style.display = 'none';
+                        resolve(true);
+                    };
 
-            customModal.classList.add('active'); // Ativa a exibição do modal
-        }
+                    const cancelButton = document.createElement('button');
+                    cancelButton.textContent = 'Cancelar';
+                    cancelButton.className = 'cancel-button';
+                    cancelButton.onclick = () => {
+                        modal.style.display = 'none';
+                        resolve(false);
+                    };
 
-        /** Oculta o modal customizado e limpa o callback de confirmação. */
-        function hideModal() {
-            customModal.classList.remove('active'); // Desativa a exibição do modal
-            onModalConfirmCallback = null; // Limpa o callback
-        }
-
-        // Adiciona event listeners aos botões do modal para interatividade
-        modalOkBtn.onclick = hideModal; // Ao clicar em OK, o modal fecha
-        modalCancelBtn.onclick = hideModal; // Ao clicar em Cancelar, o modal fecha
-        modalConfirmBtn.onclick = () => {
-            if (onModalConfirmCallback) {
-                onModalConfirmCallback(); // Executa o callback de confirmação, se existir
-            }
-            hideModal(); // Fecha o modal após a confirmação
-        };
-
-        // --- Autenticação Firebase e Inicialização do Firestore ---
-        // Observa mudanças no estado de autenticação do utilizador
-        onAuthStateChanged(auth, async (user) => {
-            const userIdDisplay = document.getElementById('userIdDisplay');
-            if (user) {
-                // Se o utilizador está logado, define o userId
-                userId = user.uid;
-                userIdDisplay.textContent = `Utilizador: ${userId}`;
-                console.log("Utilizador autenticado:", userId);
-            } else {
-                // Se nenhum utilizador está logado, tenta fazer login
-                console.log("Nenhum utilizador logado. A tentar login...");
-                try {
-                    if (initialAuthToken) {
-                        // Tenta autenticar com o token customizado fornecido pelo ambiente Canvas
-                        await signInWithCustomToken(auth, initialAuthToken);
-                        userId = auth.currentUser.uid;
-                        userIdDisplay.textContent = `Utilizador: ${userId}`;
-                        console.log("Login com token customizado bem-sucedido:", userId);
-                    } else {
-                        // Se não houver token, faz login anonimamente (para acesso básico)
-                        await signInAnonymously(auth);
-                        userId = auth.currentUser.uid;
-                        userIdDisplay.textContent = `Utilizador: ${userId}`;
-                        console.log("Login anónimo bem-sucedido:", userId);
-                    }
-                } catch (error) {
-                    console.error("Erro durante a autenticação:", error);
-                    showModal('Erro ao autenticar. Por favor, tente novamente.', 'alert');
-                    userId = null; // Garante que userId seja nulo se a autenticação falhar
-                    userIdDisplay.textContent = 'Utilizador: Erro de autenticação';
+                    modalButtons.appendChild(confirmButton);
+                    modalButtons.appendChild(cancelButton);
                 }
-            }
 
-            if (userId) {
-                // Inicializa o Firestore APÓS a autenticação estar completa
-                db = getFirestore(app);
-                // Carrega os funcionários apenas se o Firebase estiver pronto e autenticado
-                loadEmployees();
-            } else {
-                // Se não foi possível obter um userId, exibe mensagem e não carrega dados
-                document.getElementById('employeeList').innerHTML = '<li>Não foi possível carregar os dados. Verifique sua conexão ou tente novamente.</li>';
-                document.getElementById('employeeCounter').textContent = 'Total de funcionários na nuvem: Erro de conexão ☁️';
-            }
-        });
-
-        // --- Funções da Aplicação ---
-
-        /**
-         * Retorna a referência da coleção de funcionários.
-         * A coleção agora aponta para 'employees' na raiz, conforme o seu setup.
-         * @returns {firebase.firestore.CollectionReference}
-         */
-        function getEmployeesCollectionRef() {
-            return collection(db, 'employees');
+                modal.style.display = 'flex'; // Show the modal
+            });
         }
 
         /**
-         * Verifica se uma matrícula já existe no Firestore.
-         * @param {string} employeeId - A matrícula a ser verificada.
-         * @param {string} [excludeDocId] - O ID do documento a ser excluído da verificação (para edições).
-         * @returns {Promise<boolean>} - True se a matrícula for duplicada, false caso contrário.
+         * @function checkDuplicateEmployeeId
+         * @description Checks if an employee ID already exists in Firestore, excluding a specific document during edits.
+         * @param {string} employeeId - The employee ID to check.
+         * @param {string|null} excludeDocId - The document ID to exclude from the check (for edits).
+         * @returns {Promise<boolean>} True if a duplicate is found, false otherwise.
          */
         async function checkDuplicateEmployeeId(employeeId, excludeDocId = null) {
-            if (!db) return false; // Garante que db está inicializado
             try {
-                const q = query(getEmployeesCollectionRef(),
-                                where('employeeId', '==', employeeId));
-                const querySnapshot = await getDocs(q);
-                if (excludeDocId) {
-                    return querySnapshot.docs.some(d => d.id !== excludeDocId);
+                // Ensure auth is ready before attempting Firestore operations
+                if (!authReady) {
+                    console.warn("Firestore not ready. Authentication not complete.");
+                    return false; // Or throw an error, depending on desired behavior
                 }
-                return !querySnapshot.empty;
+                const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
+                const q = query(employeesRef);
+                const querySnapshot = await new Promise((resolve, reject) => {
+                    const unsubscribe = onSnapshot(q, (snapshot) => {
+                        unsubscribe(); // Unsubscribe after the first snapshot
+                        resolve(snapshot);
+                    }, reject);
+                });
+
+                if (excludeDocId) {
+                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId && doc.data().employeeId === employeeId);
+                }
+                return !querySnapshot.empty && querySnapshot.docs.some(doc => doc.data().employeeId === employeeId);
             } catch (error) {
                 console.error('Erro ao verificar matrícula:', error);
+                await showModal('Erro', 'Opa, algo deu errado ao verificar a matrícula!', 'alert');
                 return false;
             }
         }
 
         /**
-         * Verifica se um nome já existe no Firestore.
-         * @param {string} name - O nome a ser verificado.
-         * @param {string} [excludeDocId] - O ID do documento a ser excluído da verificação (para edições).
-         * @returns {Promise<boolean>} - True se o nome for duplicado, false caso contrário.
+         * @function checkDuplicateEmployeeName
+         * @description Checks if an employee name already exists in Firestore, excluding a specific document during edits.
+         * @param {string} name - The employee name to check.
+         * @param {string|null} excludeDocId - The document ID to exclude from the check (for edits).
+         * @returns {Promise<boolean>} True if a duplicate is found, false otherwise.
          */
         async function checkDuplicateEmployeeName(name, excludeDocId = null) {
-            if (!db) return false;
             try {
-                const q = query(getEmployeesCollectionRef(),
-                                where('name', '==', name.toUpperCase()));
-                const querySnapshot = await getDocs(q);
-                if (excludeDocId) {
-                    return querySnapshot.docs.some(d => d.id !== excludeDocId);
+                // Ensure auth is ready before attempting Firestore operations
+                if (!authReady) {
+                    console.warn("Firestore not ready. Authentication not complete.");
+                    return false;
                 }
-                return !querySnapshot.empty;
+                const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
+                const q = query(employeesRef);
+                const querySnapshot = await new Promise((resolve, reject) => {
+                    const unsubscribe = onSnapshot(q, (snapshot) => {
+                        unsubscribe(); // Unsubscribe after the first snapshot
+                        resolve(snapshot);
+                    }, reject);
+                });
+
+                if (excludeDocId) {
+                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId && doc.data().name === name.toUpperCase());
+                }
+                return !querySnapshot.empty && querySnapshot.docs.some(doc => doc.data().name === name.toUpperCase());
             } catch (error) {
                 console.error('Erro ao verificar nome:', error);
+                await showModal('Erro', 'Opa, algo deu errado ao verificar o nome!', 'alert');
                 return false;
             }
         }
 
         /**
-         * Adiciona um novo funcionário ou atualiza um existente no Firestore.
+         * @function saveEmployee
+         * @description Adds a new employee or updates an existing one in Firestore.
          */
         async function saveEmployee() {
-            if (!db) { // Não é necessário verificar userId aqui, pois o Firebase já está autenticado
-                showModal('Erro: Firebase não inicializado.', 'alert');
-                return;
-            }
-
             let name = document.getElementById('employeeName').value.trim().toUpperCase();
             let employeeId = document.getElementById('employeeId').value.trim();
             let role = document.getElementById('employeeRole').value;
+            let status = document.getElementById('employeeStatus').value;
 
-            if (name && employeeId && role) {
-                try {
-                    const isDuplicateId = await checkDuplicateEmployeeId(employeeId, editingEmployeeId);
-                    if (isDuplicateId) {
-                        showModal('Opa, essa matrícula já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
-                        return;
-                    }
+            // Basic validation
+            if (!name || !employeeId || !role) {
+                await showModal('Campos Obrigatórios', 'Preencha todos os campos, campeão! Não deixa a nuvem vazia! 😜', 'alert');
+                return;
+            }
 
-                    const isDuplicateName = await checkDuplicateEmployeeName(name, editingEmployeeId);
-                    if (isDuplicateName) {
-                        showModal('Opa, esse nome já tá cadastrado! Tenta outro, campeão! 😜', 'alert');
-                        return;
-                    }
-
-                    const employeeData = {
-                        name: name,
-                        employeeId: employeeId,
-                        role: role,
-                        timestamp: new Date() // Usando data local para timestamp
-                    };
-
-                    if (editingEmployeeId) {
-                        // Atualiza funcionário existente
-                        await updateDoc(doc(getEmployeesCollectionRef(), editingEmployeeId), employeeData);
-                        showModal('Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
-                    } else {
-                        // Adiciona novo funcionário
-                        await addDoc(getEmployeesCollectionRef(), employeeData);
-                        showModal('Funcionário salvo na nuvem! Tá voando alto! 🚀', 'alert');
-                    }
-
-                    cancelEdit();
-                    loadEmployees();
-                } catch (error) {
-                    console.error('Erro ao salvar:', error);
-                    showModal('Opa, algo deu errado! Erro: ' + error.message, 'alert');
+            try {
+                // Check for duplicate employee ID
+                const isDuplicateId = await checkDuplicateEmployeeId(employeeId, editingEmployeeId);
+                if (isDuplicateId) {
+                    await showModal('Matrícula Duplicada', 'Opa, essa matrícula já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
+                    return;
                 }
-            } else {
-                showModal('Preenche todos os campos, campeão! Não deixa a nuvem vazia! 😜', 'alert');
+
+                // Check for duplicate employee name
+                const isDuplicateName = await checkDuplicateEmployeeName(name, editingEmployeeId);
+                if (isDuplicateName) {
+                    await showModal('Nome Duplicado', 'Opa, esse nome já tá cadastrado! Tenta outro, campeão! 😜', 'alert');
+                    return;
+                }
+
+                // Employee data object
+                const employeeData = {
+                    name: name,
+                    employeeId: employeeId,
+                    role: role,
+                    status: status,
+                    timestamp: FieldValue.serverTimestamp()
+                };
+
+                if (editingEmployeeId) {
+                    // Update existing employee
+                    const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, editingEmployeeId);
+                    await updateDoc(employeeDocRef, employeeData);
+                    await showModal('Sucesso!', 'Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
+                } else {
+                    // Add new employee
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/employees`), employeeData);
+                    await showModal('Sucesso!', 'Funcionário salvo na nuvem! Tá voando alto! 🚀', 'alert');
+                }
+
+                // Reset the form and reload employees
+                cancelEdit();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                await showModal('Erro ao Salvar', 'Opa, algo deu errado ao salvar! Erro: ' + error.message, 'alert');
             }
         }
 
-        /** Reseta o formulário e cancela a edição. */
+        /**
+         * @function cancelEdit
+         * @description Resets the form and cancels any ongoing edit operation.
+         */
         function cancelEdit() {
             editingEmployeeId = null;
             document.getElementById('formTitle').textContent = 'Adicionar Funcionário';
@@ -614,16 +337,22 @@
             document.getElementById('employeeName').value = '';
             document.getElementById('employeeId').value = '';
             document.getElementById('employeeRole').value = '';
-            
-            // Remove destaque de qualquer item selecionado
+            document.getElementById('employeeStatus').value = 'ativo';
+
+            // Remove highlight from any selected item
             document.querySelectorAll('#employeeList li').forEach(item => {
                 item.classList.remove('selected');
             });
+            if (currentEditingLi) {
+                currentEditingLi.classList.remove('edit-mode');
+                currentEditingLi = null;
+            }
         }
 
         /**
-         * Preenche o formulário para edição de um funcionário.
-         * @param {object} employee - O objeto funcionário a ser editado.
+         * @function editEmployee
+         * @description Populates the form with employee data for editing.
+         * @param {object} employee - The employee object to edit.
          */
         function editEmployee(employee) {
             editingEmployeeId = employee.id;
@@ -633,174 +362,503 @@
             document.getElementById('employeeName').value = employee.name || '';
             document.getElementById('employeeId').value = employee.employeeId || '';
             document.getElementById('employeeRole').value = employee.role || '';
-            
-            // Foco no campo de nome pra facilitar
+            document.getElementById('employeeStatus').value = employee.status || 'ativo';
+            // Focus on the name field for easy editing
             document.getElementById('employeeName').focus();
         }
 
         /**
-         * Exclui um funcionário do Firestore.
-         * @param {string} employeeId - O ID do documento do funcionário a ser excluído.
-         * @param {string} employeeName - O nome do funcionário para a mensagem de confirmação.
+         * @function deleteEmployee
+         * @description Deletes an employee from Firestore after user confirmation.
+         * @param {string} employeeId - The ID of the employee document to delete.
+         * @param {string} employeeName - The name of the employee for confirmation message.
          */
         async function deleteEmployee(employeeId, employeeName) {
-            if (!db) {
-                showModal('Erro: Firebase não inicializado.', 'alert');
-                return;
-            }
-
-            // Usa o modal customizado para confirmação
-            showModal(`Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm', async () => {
+            const confirmed = await showModal('Confirmação', `Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm');
+            if (confirmed) {
                 try {
-                    await deleteDoc(doc(getEmployeesCollectionRef(), employeeId));
-                    showModal('Funcionário removido da nuvem! 😢', 'alert');
-                    loadEmployees();
+                    const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, employeeId);
+                    await deleteDoc(employeeDocRef);
+                    await showModal('Sucesso!', 'Funcionário removido da nuvem! 😢', 'alert');
+                    // No need to call loadEmployees() as onSnapshot will handle it
                 } catch (error) {
                     console.error('Erro ao apagar funcionário:', error);
-                    showModal('Opa, algo deu errado ao apagar! Erro: ' + error.message, 'alert');
+                    await showModal('Erro ao Apagar', 'Opa, algo deu errado ao apagar! Erro: ' + error.message, 'alert');
                 }
-            });
+            }
         }
 
         /**
-         * Retorna um ícone emoji baseado no cargo do funcionário.
-         * @param {string} role - O cargo do funcionário.
-         * @returns {string} - O emoji correspondente ao cargo.
+         * @function startInlineEdit
+         * @description Converts an employee list item into an editable form.
+         * @param {HTMLElement} li - The list item element to make editable.
+         * @param {object} employee - The employee data.
+         */
+        function startInlineEdit(li, employee) {
+            if (currentEditingLi) {
+                // If another item is being edited, revert it first.
+                const originalEmployeeData = JSON.parse(currentEditingLi.dataset.originalEmployee);
+                cancelInlineEdit(currentEditingLi, originalEmployeeData);
+            }
+            currentEditingLi = li;
+            li.classList.add('edit-mode');
+            li.dataset.originalEmployee = JSON.stringify(employee); // Store original data
+
+            let infoDiv = li.querySelector('.employee-info');
+            infoDiv.innerHTML = ''; // Clear current info
+
+            // Create input fields for inline editing
+            let nameInput = document.createElement('input');
+            nameInput.value = employee.name;
+            nameInput.className = 'p-1 border border-gray-300 rounded-md text-sm w-full md:w-auto flex-grow mr-1';
+            nameInput.placeholder = 'Nome';
+
+            let idInput = document.createElement('input');
+            idInput.value = employee.employeeId;
+            idInput.className = 'p-1 border border-gray-300 rounded-md text-sm w-24 mr-1';
+            idInput.placeholder = 'Matrícula';
+
+            let roleSelect = document.createElement('select');
+            roleSelect.className = 'p-1 border border-gray-300 rounded-md text-sm w-28 mr-1';
+            ['Coletor', 'Gari', 'Motorista'].forEach(role => {
+                let option = document.createElement('option');
+                option.value = role;
+                option.text = role;
+                if (role === employee.role) option.selected = true;
+                roleSelect.appendChild(option);
+            });
+
+            let statusSelect = document.createElement('select');
+            statusSelect.className = 'p-1 border border-gray-300 rounded-md text-sm w-24 mr-1';
+            ['ativo', 'inativo'].forEach(status => {
+                let option = document.createElement('option');
+                option.value = status;
+                option.text = status.charAt(0).toUpperCase() + status.slice(1);
+                if (status === employee.status) option.selected = true;
+                statusSelect.appendChild(option);
+            });
+
+            // Append inputs to infoDiv
+            infoDiv.appendChild(nameInput);
+            infoDiv.appendChild(idInput);
+            infoDiv.appendChild(roleSelect);
+            infoDiv.appendChild(statusSelect);
+
+            // Create Save and Cancel icons
+            let saveIcon = document.createElement('span');
+            saveIcon.textContent = '💾';
+            saveIcon.title = 'Salvar';
+            saveIcon.className = 'save-icon text-green-600 hover:text-green-800 text-lg cursor-pointer ml-2';
+            saveIcon.onclick = (e) => {
+                e.stopPropagation(); // Prevent li click event
+                saveInlineEdit(li, employee.id, nameInput.value, idInput.value, roleSelect.value, statusSelect.value);
+            };
+
+            let cancelIcon = document.createElement('span');
+            cancelIcon.textContent = '🚫';
+            cancelIcon.title = 'Cancelar';
+            cancelIcon.className = 'cancel-icon text-gray-500 hover:text-gray-700 text-lg cursor-pointer ml-1';
+            cancelIcon.onclick = (e) => {
+                e.stopPropagation(); // Prevent li click event
+                const originalData = JSON.parse(li.dataset.originalEmployee);
+                cancelInlineEdit(li, originalData);
+            };
+
+            // Replace existing icons with Save and Cancel
+            const existingEditIcon = li.querySelector('.edit-icon');
+            const existingDeleteIcon = li.querySelector('.delete-icon');
+            if (existingEditIcon) existingEditIcon.remove();
+            if (existingDeleteIcon) existingDeleteIcon.remove();
+
+            li.appendChild(saveIcon);
+            li.appendChild(cancelIcon);
+        }
+
+        /**
+         * @function saveInlineEdit
+         * @description Saves inline edited employee data to Firestore.
+         * @param {HTMLElement} li - The list item element.
+         * @param {string} employeeId - The ID of the employee document.
+         * @param {string} newName - The new name.
+         * @param {string} newEmployeeId - The new employee ID.
+         * @param {string} newRole - The new role.
+         * @param {string} newStatus - The new status.
+         */
+        async function saveInlineEdit(li, employeeId, newName, newEmployeeId, newRole, newStatus) {
+            newName = newName.trim().toUpperCase();
+            newEmployeeId = newEmployeeId.trim();
+
+            if (!newName || !newEmployeeId || !newRole) {
+                await showModal('Campos Obrigatórios', 'Preencha todos os campos da edição em linha!', 'alert');
+                return;
+            }
+
+            try {
+                // Check for duplicate employee ID
+                const isDuplicateId = await checkDuplicateEmployeeId(newEmployeeId, employeeId);
+                if (isDuplicateId) {
+                    await showModal('Matrícula Duplicada', 'Opa, essa matrícula já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
+                    return;
+                }
+                // Check for duplicate employee name
+                const isDuplicateName = await checkDuplicateEmployeeName(newName, employeeId);
+                if (isDuplicateName) {
+                    await showModal('Nome Duplicado', 'Opa, esse nome já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
+                    return;
+                }
+
+                const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, employeeId);
+                await updateDoc(employeeDocRef, {
+                    name: newName,
+                    employeeId: newEmployeeId,
+                    role: newRole,
+                    status: newStatus,
+                    timestamp: FieldValue.serverTimestamp()
+                });
+                await showModal('Sucesso!', 'Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
+                currentEditingLi = null; // Reset editing state
+            } catch (error) {
+                console.error('Erro ao salvar edição em linha:', error);
+                await showModal('Erro ao Salvar', 'Opa, algo deu errado! Erro: ' + error.message, 'alert');
+            }
+        }
+
+        /**
+         * @function cancelInlineEdit
+         * @description Cancels inline editing and reverts the list item to display mode.
+         * @param {HTMLElement} li - The list item element.
+         * @param {object} employee - The original employee data to restore.
+         */
+        function cancelInlineEdit(li, employee) {
+            li.classList.remove('edit-mode');
+            delete li.dataset.originalEmployee; // Remove stored original data
+
+            let infoDiv = li.querySelector('.employee-info');
+            // Reconstruct the display HTML for the employee
+            infoDiv.innerHTML = `${getRoleIcon(employee.role)} <span class="employee-name">${employee.name}</span> <span class="employee-id-role">-${employee.employeeId} - ${employee.role}</span><span class="employee-status ${employee.status === 'inativo' ? 'text-red-500' : 'text-green-600'}"> (${employee.status.charAt(0).toUpperCase() + employee.status.slice(1)})</span>`;
+
+            // Recreate original action icons (edit and delete)
+            const saveIcon = li.querySelector('.save-icon');
+            const cancelIcon = li.querySelector('.cancel-icon');
+            if (saveIcon) saveIcon.remove();
+            if (cancelIcon) cancelIcon.remove();
+
+            let editIcon = document.createElement('span');
+            editIcon.textContent = '✏️';
+            editIcon.title = 'Editar';
+            editIcon.className = 'edit-icon text-blue-600 hover:text-blue-800 text-lg cursor-pointer ml-2';
+            editIcon.onclick = (e) => {
+                e.stopPropagation();
+                startInlineEdit(li, employee);
+            };
+
+            let deleteIcon = document.createElement('span');
+            deleteIcon.textContent = '🗑️';
+            deleteIcon.title = 'Excluir';
+            deleteIcon.className = 'delete-icon text-red-500 hover:text-red-700 text-lg cursor-pointer ml-1';
+            deleteIcon.onclick = (e) => {
+                e.stopPropagation();
+                deleteEmployee(employee.id, employee.name);
+            };
+
+            li.appendChild(editIcon);
+            li.appendChild(deleteIcon);
+            currentEditingLi = null; // Reset editing state
+        }
+
+
+        /**
+         * @function getRoleIcon
+         * @description Returns an emoji icon based on the employee's role.
+         * @param {string} role - The employee's role.
+         * @returns {string} The corresponding emoji.
          */
         function getRoleIcon(role) {
             switch (role) {
                 case 'Gari': return '🧹';
                 case 'Motorista': return '🚛';
                 case 'Coletor': return '🗑️';
-                default: return '👤'; // Ícone padrão
+                default: return '';
             }
         }
 
         /**
-         * Carrega e exibe a lista de funcionários do Firestore.
-         * Aplica filtro de busca localmente após a ordenação do Firestore.
-         * @param {string} [queryText=''] - O texto de busca para filtrar os funcionários.
+         * @function loadEmployees
+         * @description Fetches and displays employees from Firestore based on current filters.
+         * Uses onSnapshot for real-time updates.
+         * @param {string} queryText - Text to search for in name, ID, or role.
+         * @param {string} roleFilter - Filter by employee role.
+         * @param {string} statusFilter - Filter by employee status.
          */
-        async function loadEmployees(queryText = '') {
-            if (!db) {
-                // O Firestore ainda não foi inicializado. A autenticação está sendo processada.
+        function loadEmployees(queryText = '', roleFilter = '', statusFilter = '') {
+            // Ensure auth is ready before attempting Firestore operations
+            if (!authReady) {
+                console.warn("Firestore not ready. Authentication not complete.");
                 return;
             }
 
-            try {
-                console.log('Iniciando busca com query:', queryText);
-                let ul = document.getElementById('employeeList');
-                let counter = document.getElementById('employeeCounter');
-                ul.innerHTML = ''; // Limpa a lista existente
+            const employeeListUl = document.getElementById('employeeList');
+            const employeeCounterP = document.getElementById('employeeCounter');
+            
+            // Reference to the 'employees' collection
+            const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
+            const q = query(employeesRef); // Initial query without specific where clauses for onSnapshot
 
-                // Consulta Firestore: ordena por employeeId e name
-                const q = query(getEmployeesCollectionRef(),
-                                orderBy('employeeId'), // Primeiro ordena por matrícula
-                                orderBy('name'));      // Depois ordena por nome
-
-                const snapshot = await getDocs(q);
-                console.log('Documentos encontrados:', snapshot.size);
-
+            // Set up real-time listener
+            onSnapshot(q, (snapshot) => {
                 let employees = [];
-                snapshot.forEach(d => {
-                    let employee = { id: d.id, ...d.data() };
-                    // Garante que os campos existem e são válidos
+                snapshot.forEach(doc => {
+                    const employee = doc.data();
+                    // Basic validation for required fields
                     if (!employee.employeeId || !employee.name || !employee.role) {
-                        console.warn(`Documento ${d.id} possui campos ausentes ou inválidos, ignorando:`, employee);
-                        return;
+                        console.warn(`Document ${doc.id} possui campos ausentes ou inválidos:`, employee);
+                        return; // Skip this document if essential fields are missing
                     }
-
-                    // Filtra os resultados no cliente (após a ordenação do Firestore)
-                    const lowerCaseQuery = queryText.toLowerCase();
-                    const employeeNameLower = employee.name.toLowerCase();
-                    const employeeIdLower = employee.employeeId.toLowerCase();
-                    const employeeRoleLower = employee.role.toLowerCase();
-
-                    // Verifica se o termo de busca está presente em nome (começando com), matrícula ou cargo
-                    if (
-                        queryText === '' ||
-                        employeeIdLower.includes(lowerCaseQuery) ||
-                        employeeNameLower.startsWith(lowerCaseQuery) || // Busca por nome que COMEÇA com o termo
-                        employeeRoleLower.includes(lowerCaseQuery)
-                    ) {
-                        employees.push(employee);
-                    }
+                    employees.push({
+                        id: doc.id,
+                        name: employee.name,
+                        employeeId: employee.employeeId,
+                        role: employee.role,
+                        status: employee.status || 'ativo' // Default to 'ativo' if status is missing
+                    });
                 });
-                
-                counter.textContent = `Total de funcionários na nuvem: ${employees.length} ☁️`;
 
-                if (employees.length === 0) {
-                    ul.innerHTML = '<li>Nenhum funcionário encontrado. Tenta de novo! 😅</li>';
+                // Apply in-memory filtering (due to Firestore query limitations and avoiding index creation issues)
+                const filteredEmployees = employees.filter(employee => {
+                    const lowerCaseQuery = queryText.toLowerCase();
+                    const nameMatches = employee.name.toLowerCase().includes(lowerCaseQuery);
+                    const idMatches = employee.employeeId.toLowerCase().includes(lowerCaseQuery);
+                    const roleMatches = employee.role.toLowerCase().includes(lowerCaseQuery);
+                    
+                    const matchesQuery = (queryText === '' || nameMatches || idMatches || roleMatches);
+                    const matchesRole = (roleFilter === '' || employee.role === roleFilter);
+                    const matchesStatus = (statusFilter === '' || employee.status === statusFilter);
+
+                    return matchesQuery && matchesRole && matchesStatus;
+                });
+
+                // Sort by employeeId in ascending order (in-memory)
+                filteredEmployees.sort((a, b) => {
+                    const idA = a.employeeId || '';
+                    const idB = b.employeeId || '';
+                    // Handle numeric part of IDs correctly (e.g., "001" vs "10")
+                    const numIdA = parseInt(idA.replace(/\D/g, ''), 10) || 0;
+                    const numIdB = parseInt(idB.replace(/\D/g, ''), 10) || 0;
+
+                    if (numIdA !== numIdB) {
+                        return numIdA - numIdB;
+                    }
+                    // Fallback to string comparison if numeric parts are identical (for cases like "A1" vs "A2")
+                    return idA.localeCompare(idB);
+                });
+
+                // Update UI
+                employeeCounterP.textContent = `Total de funcionários na nuvem: ${filteredEmployees.length} ☁️`;
+                employeeListUl.innerHTML = ''; // Clear current list
+
+                if (filteredEmployees.length === 0) {
+                    const noResultsLi = document.createElement('li');
+                    noResultsLi.className = 'bg-white p-4 rounded-lg shadow-md text-center text-gray-500 italic';
+                    noResultsLi.textContent = 'Nenhum funcionário encontrado. Tenta de novo! 😅';
+                    employeeListUl.appendChild(noResultsLi);
                 } else {
-                    employees.forEach(employee => {
-                        let li = document.createElement('li');
-                        li.innerHTML = `
-                            <div>
-                                ${getRoleIcon(employee.role)} 
-                                <strong>${employee.name}</strong> 
-                                - Matrícula: ${employee.employeeId} 
-                                - Cargo: ${employee.role}
-                            </div>
-                        `;
+                    filteredEmployees.forEach(employee => {
+                        const li = document.createElement('li');
+                        li.id = `employee-${employee.id}`; // Add a unique ID for easy access
+                        li.className = `flex items-center justify-between p-4 mb-2 bg-white rounded-lg shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:bg-gray-50 ${employee.status === 'inativo' ? 'opacity-80' : ''}`;
+                        li.classList.toggle('inactive', employee.status === 'inativo');
+
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'employee-info flex items-center flex-grow flex-wrap';
                         
-                        // Adiciona botão de apagar
-                        let deleteButton = document.createElement('button');
-                        deleteButton.textContent = 'Apagar';
-                        deleteButton.className = 'delete-button';
-                        deleteButton.onclick = (e) => {
-                            e.stopPropagation(); // Impede que o clique no botão ative a edição
+                        // Role Icon
+                        const roleIconSpan = document.createElement('span');
+                        roleIconSpan.textContent = getRoleIcon(employee.role);
+                        roleIconSpan.className = 'mr-2 text-xl';
+
+                        // Employee Name
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'employee-name font-semibold text-gray-800 text-base mr-2';
+                        nameSpan.textContent = employee.name;
+
+                        // Employee ID and Role
+                        const idRoleSpan = document.createElement('span');
+                        idRoleSpan.className = 'employee-id-role text-gray-600 text-sm break-all mr-2';
+                        idRoleSpan.textContent = `(${employee.employeeId} - ${employee.role})`;
+
+                        // Employee Status
+                        const statusSpan = document.createElement('span');
+                        statusSpan.className = `employee-status text-sm italic ${employee.status === 'inativo' ? 'text-red-500' : 'text-green-600'}`;
+                        statusSpan.textContent = `(${employee.status.charAt(0).toUpperCase() + employee.status.slice(1)})`;
+
+                        infoDiv.appendChild(roleIconSpan);
+                        infoDiv.appendChild(nameSpan);
+                        infoDiv.appendChild(idRoleSpan);
+                        infoDiv.appendChild(statusSpan);
+                        
+                        // Action Icons Container
+                        const actionIconsDiv = document.createElement('div');
+                        actionIconsDiv.className = 'flex-shrink-0 flex items-center ml-auto';
+
+                        // Edit Icon
+                        const editIcon = document.createElement('span');
+                        editIcon.textContent = '✏️'; // Pencil emoji
+                        editIcon.title = 'Editar';
+                        editIcon.className = 'edit-icon text-blue-600 hover:text-blue-800 text-lg cursor-pointer ml-2';
+                        editIcon.onclick = (e) => {
+                            e.stopPropagation(); // Prevent li click event from firing
+                            startInlineEdit(li, employee);
+                        };
+
+                        // Delete Icon
+                        const deleteIcon = document.createElement('span');
+                        deleteIcon.textContent = '🗑️'; // Wastebasket emoji
+                        deleteIcon.title = 'Excluir';
+                        deleteIcon.className = 'delete-icon text-red-500 hover:text-red-700 text-lg cursor-pointer ml-1';
+                        deleteIcon.onclick = (e) => {
+                            e.stopPropagation(); // Prevent li click event from firing
                             deleteEmployee(employee.id, employee.name);
                         };
-                        li.appendChild(deleteButton);
-                        
-                        // Adiciona event listener para edição (ao clicar no item da lista)
+
+                        actionIconsDiv.appendChild(editIcon);
+                        actionIconsDiv.appendChild(deleteIcon);
+
+                        li.appendChild(infoDiv);
+                        li.appendChild(actionIconsDiv);
+
+                        // Click handler for selecting an employee (to populate the main form)
                         li.onclick = (e) => {
-                            if (e.target !== deleteButton) { // Evita edição ao clicar no botão de apagar
-                                // Remove destaque de outros itens
+                            // Only select if not in inline edit mode and not clicking action icons
+                            if (!li.classList.contains('edit-mode') && 
+                                e.target !== editIcon && e.target !== deleteIcon &&
+                                e.target.parentElement !== actionIconsDiv) {
+                                
                                 document.querySelectorAll('#employeeList li').forEach(item => {
-                                    item.classList.remove('selected');
+                                    item.classList.remove('selected', 'border-2', 'border-blue-500', 'bg-blue-50');
                                 });
-                                // Adiciona destaque ao item clicado
-                                li.classList.add('selected');
-                                // Chama a função de edição
+                                li.classList.add('selected', 'border-2', 'border-blue-500', 'bg-blue-50');
                                 editEmployee(employee);
-                                // Rola pro formulário
                                 document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
                             }
                         };
-                        ul.appendChild(li);
+                        employeeListUl.appendChild(li);
                     });
                 }
-            } catch (error) {
-                console.error('Erro ao carregar lista:', error);
+            }, (error) => {
+                console.error('Erro ao carregar lista em tempo real:', error);
                 let errorMessage = error.message || 'Erro desconhecido';
-                if (error.code === 'failed-precondition') {
-                    errorMessage = 'Atenção! Índice do Firestore ausente. Acesse o Firebase Console (Projeto > Firestore Database > Índices) e crie um índice composto para a coleção "employees" com os campos: "employeeId" (ascendente) e "name" (ascendente). Isso é essencial para a ordenação correta. 🛠️';
+                if (error.code === 'permission-denied') {
+                    errorMessage = 'Você não tem permissão para acessar esses dados. Verifique as regras de segurança do Firestore.';
+                } else if (error.code === 'failed-precondition') {
+                    errorMessage = 'Índice do Firestore ausente. Acesse o Firebase Console e crie um índice composto para "employees" com "employeeId" (asc) e "name" (asc).';
                 }
-                showModal('Erro ao carregar a lista: ' + errorMessage, 'alert');
-            }
+                showModal('Erro ao Carregar', 'Opa, algo deu errado ao carregar a lista: ' + errorMessage, 'alert');
+            });
         }
 
         /**
-         * Dispara a busca de funcionários com base no input.
+         * @function searchEmployees
+         * @description Triggers a reload of employees with the current search query and filters.
+         * Called on 'keyup' for the search input.
          */
         function searchEmployees() {
-            let queryInput = document.getElementById('searchInput').value.trim();
-            console.log('Evento de busca disparado com:', queryInput);
-            loadEmployees(queryInput);
+            const query = document.getElementById('searchInput').value.trim();
+            const roleFilter = document.getElementById('roleFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            loadEmployees(query, roleFilter, statusFilter);
         }
 
         /**
-         * Lista todos os funcionários, limpando o campo de busca.
+         * @function filterByRole
+         * @description Triggers a reload of employees with the current role filter.
+         * Called on 'change' for the role select.
+         */
+        function filterByRole() {
+            searchEmployees(); // Reuse searchEmployees as it gathers all filters
+        }
+
+        /**
+         * @function filterByStatus
+         * @description Triggers a reload of employees with the current status filter.
+         * Called on 'change' for the status select.
+         */
+        function filterByStatus() {
+            searchEmployees(); // Reuse searchEmployees as it gathers all filters
+        }
+
+        /**
+         * @function listAllEmployees
+         * @description Resets all search and filter inputs and reloads all employees.
          */
         function listAllEmployees() {
             document.getElementById('searchInput').value = '';
-            console.log('Listando todos os funcionários');
-            loadEmployees('');
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            loadEmployees('', '', ''); // Load all employees
         }
 
-        // Não chame loadEmployees() diretamente aqui.
-        // Ele será chamado após a autenticação ser estabelecida no onAuthStateChanged.
+        // Initialize Firebase and set up authentication
+        async function initializeFirebaseAndAuth() {
+            try {
+                // Initialize Firebase app
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Check for initial auth token provided by the environment
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                }
+
+                // Listen for authentication state changes
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('userIdDisplay').textContent = `ID do Usuário: ${userId}`;
+                        authReady = true; // Set flag to true once authentication is confirmed
+                        console.log("Auth state changed. User ID:", userId);
+                        loadEmployees(); // Load employees only after authentication is ready
+                    } else {
+                        userId = null;
+                        document.getElementById('userIdDisplay').textContent = `ID do Usuário: Não autenticado`;
+                        authReady = false;
+                        console.log("Auth state changed. No user.");
+                        // Handle unauthenticated state if necessary (e.g., clear list)
+                        document.getElementById('employeeList').innerHTML = '<li class="bg-white p-4 rounded-lg shadow-md text-center text-gray-500 italic">Por favor, autentique-se para ver os funcionários.</li>';
+                        document.getElementById('employeeCounter').textContent = 'Total de funcionários na nuvem: 0 ☁️';
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase or signing in:", error);
+                await showModal('Erro de Inicialização', 'Opa, não consegui iniciar o sistema! Erro: ' + error.message, 'alert');
+            }
+        }
+
+        // Call the initialization function when the window loads
+        window.onload = initializeFirebaseAndAuth;
+
+        // Make functions globally accessible for inline HTML event handlers
+        window.saveEmployee = saveEmployee;
+        window.cancelEdit = cancelEdit;
+        window.editEmployee = editEmployee;
+        window.deleteEmployee = deleteEmployee;
+        window.searchEmployees = searchEmployees;
+        window.filterByRole = filterByRole;
+        window.filterByStatus = filterByStatus;
+        window.listAllEmployees = listAllEmployees;
+        window.showModal = showModal; // Expose modal for debugging if needed
+        window.startInlineEdit = startInlineEdit;
+        window.saveInlineEdit = saveInlineEdit;
+        window.cancelInlineEdit = cancelInlineEdit;
+
+        // IMPORTANT: The `loadEmployees` function is now called inside `onAuthStateChanged` to ensure Firestore is ready.
+        // It should NOT be called directly here.
     </script>
 </body>
 </html>
