@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Jogue Neon Tetris, um jogo clássico com visual neon vibrante e trilha sonora imersiva. Salve sua pontuação e desafie amigos no ranking global!">
+    <meta name="keywords" content="Neon Tetris, jogo de Tetris, jogo online, Tetris grátis, ranking Tetris">
+    <meta property="og:title" content="Neon Tetris - Jogo Online Grátis">
+    <meta property="og:description" content="Desafie suas habilidades com Neon Tetris, um jogo com visual neon e ranking global. Jogue agora!">
+    <meta property="og:image" content="URL_DA_IMAGEM_DO_JOGO">
+    <meta property="og:url" content="URL_DO_SEU_JOGO">
+    <meta name="twitter:card" content="summary_large_image">
     <title>Neon Tetris</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de áudio Tone.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <link rel="stylesheet" href="dist/output.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" defer></script>
     <style>
         @keyframes neon-pulse {
-            0% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00f7ff, 0 0 20px #ff00ff; }
-            50% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00f7ff, 0 0 40px #ff00ff; }
-            100% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00f7ff, 0 0 20px #ff00ff; }
+            0% { text-shadow: 0 0 5px #fff, 0 0 10px #00f7ff; }
+            50% { text-shadow: 0 0 10px #fff, 0 0 20px #00f7ff; }
+            100% { text-shadow: 0 0 5px #fff, 0 0 10px #00f7ff; }
         }
         @keyframes neon-glow {
             0% { text-shadow: 0 0 3px #00f7ff, 0 0 6px #00f7ff; }
@@ -76,6 +85,7 @@
             margin-bottom: 1rem;
             color: #fff;
             animation: neon-pulse 2s infinite;
+            will-change: text-shadow;
         }
         .modal-content p {
             font-size: 1rem;
@@ -111,11 +121,13 @@
             color: #1a1a2e;
             padding: 10px 25px;
             border-radius: 20px;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             z-index: 10;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
+            max-width: 90vw;
+            text-align: center;
         }
         #score-popup.show {
             opacity: 1;
@@ -123,7 +135,7 @@
         #score-popup.record-beaten {
             background-color: rgba(37, 211, 102, 0.85);
             color: #fff;
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
             padding: 15px 30px;
         }
         #game-info {
@@ -317,6 +329,17 @@
             margin-top: 15px;
             color: #00f7ff;
             animation: neon-glow 2s infinite;
+            will-change: text-shadow;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -324,7 +347,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div id="game-container">
         <canvas id="tetris-canvas"></canvas>
         <div id="score-popup"><span id="score">0</span></div>
@@ -333,19 +355,23 @@
             <p>Linhas: <span id="game-lines">0</span></p>
             <p>Nível: <span id="game-level">1</span></p>
         </div>
-        <div id="mute-button">🔊</div>
-        <div id="pause-button">⏸</div>
+        <div id="mute-button" aria-label="Alternar som">🔊</div>
+        <div id="pause-button" aria-label="Pausar jogo">⏸</div>
         <div id="next-piece-container">
             <canvas id="next-piece-canvas"></canvas>
         </div>
-        <button id="fullscreen-button">⛶</button>
+        <button id="fullscreen-button" aria-label="Alternar tela cheia">⛶</button>
     </div>
-
-    <div id="modal-overlay" class="overlay">
+    <section class="sr-only">
+        <h2>Neon Tetris - Jogo Online</h2>
+        <p>Neon Tetris é uma versão moderna do clássico jogo de Tetris, com gráficos vibrantes em estilo neon e uma trilha sonora imersiva. Desafie suas habilidades, acumule pontos e salve sua pontuação no ranking global. Disponível para jogar no PC e celular!</p>
+    </section>
+    <div id="modal-overlay" class="overlay" role="dialog" aria-modal="true">
         <div class="modal-content">
             <h1 id="modal-title">NEON TETRIS</h1>
-            <p id="modal-text">Controles: Setas (PC) ou Toque/Arraste (Celular).</p>
+            <p id="modal-text">Controles: Setas (PC) ou Toque/Arraste (Celular). Arraste para mover, toque para girar, segure para descer, deslize para baixo para descida rápida.</p>
             <div id="game-over-content" class="hidden">
+                <label for="player-name-input" class="sr-only">Digite seu nome</label>
                 <input type="text" id="player-name-input" placeholder="Digite seu nome" maxlength="10">
                 <button id="save-score-button">Salvar Recorde</button>
             </div>
@@ -363,7 +389,7 @@
             <div id="high-scores-container" class="hidden">
                 <ul id="high-scores-list"></ul>
             </div>
-            <a href="https://chat.whatsapp.com/BQVgfNFY7Cl3QLkZeV3Kau?mode=ems_copy_t" target="_blank" id="whatsapp-link">
+            <a href="https://chat.whatsapp.com/BQVgfNFY7Cl3QLkZeV3Kau?mode=ems_copy_t" target="_blank" id="whatsapp-link" aria-label="Entrar no grupo do WhatsApp para atualizações do jogo">
                 <span>Para receber atualizações sobre o jogo, entre no grupo!</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="whatsapp-icon">
                     <path fill="#25D366" d="M24,4C12.954,4,4,12.954,4,24c0,3.375,0.837,6.652,2.423,9.586L4,44l10.737-2.814 c2.606,1.418,5.511,2.232,8.604,2.232C35.046,43.418,44,34.464,44,24S35.046,4.582,24,4.582V4z"/>
@@ -466,19 +492,10 @@
                     await signInAnonymously(auth);
                 } catch (error) {
                     console.error("Erro ao inicializar o Firebase:", error);
-                    startButton.disabled = true;
-                    if (error.code === 'auth/operation-not-allowed') {
-                        startButton.innerText = "Ação Necessária";
-                        modalText.innerHTML = `
-                            <p class="text-red-400 font-bold">A Autenticação Anônima não está ativada no seu projeto Firebase.</p>
-                            <p class="text-sm mt-2">1. Vá para o seu projeto no Firebase.</p>
-                            <p class="text-sm">2. Clique em <strong>Build > Authentication > Sign-in method</strong>.</p>
-                            <p class="text-sm">3. Encontre <strong>"Anônimo"</strong> na lista, ative e salve.</p>
-                            <p class="text-sm mt-2">Depois, atualize esta página.</p>
-                        `;
-                    } else {
-                        startButton.innerText = "Erro de Conexão";
-                    }
+                    startButton.disabled = false;
+                    startButton.innerText = "Jogar Offline";
+                    modalText.innerHTML = `<p>Não foi possível conectar ao ranking online. Você pode jogar offline!</p>`;
+                    startButton.addEventListener('click', startGame);
                 }
             }
 
@@ -900,6 +917,9 @@
                     scoreEl.textContent = `Você superou o recorde de ${beatenRecord.name}!`;
                     scorePopup.classList.add('record-beaten');
                     scorePopup.classList.add('show');
+                    if (scoreSynth && !Tone.Destination.mute) {
+                        scoreSynth.triggerAttackRelease("G5", "8n");
+                    }
                     recordBeatenTimeout = setTimeout(() => {
                         scorePopup.classList.remove('show');
                         scorePopup.classList.remove('record-beaten');
@@ -1060,7 +1080,7 @@
                 scoresButton.style.display = 'inline-block';
                 pauseContent.classList.add('hidden');
                 modalTitle.innerText = "NEON TETRIS";
-                modalText.innerText = "Controles: Setas (PC) ou Toque/Arraste (Celular).";
+                modalText.innerText = "Controles: Setas (PC) ou Toque/Arraste (Celular). Arraste para mover, toque para girar, segure para descer, deslize para baixo para descida rápida.";
             });
 
             async function main() {
