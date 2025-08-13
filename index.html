@@ -3,862 +3,638 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mineiro - Gerenciar Funcionários na Nuvem</title>
-    <!-- Incluindo Tailwind CSS -->
+    <title>Snake.io 2D</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuração da fonte Inter (opcional, mas boa prática) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-        }
-        /* Estilos para o modal de mensagem */
-        .modal {
-            display: none; /* Escondido por padrão */
-            position: fixed; /* Fica por cima de tudo */
-            z-index: 1000; /* Alto z-index para garantir que fique na frente */
-            left: 0;
-            top: 0;
-            width: 100%; /* Largura total */
-            height: 100%; /* Altura total */
-            overflow: auto; /* Habilita rolagem se o conteúdo for muito grande */
-            background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
+        canvas {
+            border: 3px solid #34495e;
+            background-color: #1a1a1a;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            max-width: 95vw;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 400px;
+            background-color: #34495e;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        .score-display {
+            font-size: 1.5rem;
+            margin-top: 15px;
+            color: #ecf0f1;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #ecf0f1;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 2rem;
             text-align: center;
+            display: none;
+            z-index: 100;
         }
-        .modal-content h3 {
-            margin-top: 0;
-            font-size: 1.25rem;
-            font-weight: 600;
+        .game-message button {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
         }
-        .modal-content p {
-            margin-bottom: 20px;
-            font-size: 1rem;
-            color: #4a5568;
+        .game-message button:hover {
+            background-color: #27ae60;
         }
-        .modal-buttons button {
-            @apply px-4 py-2 rounded-lg text-white font-medium transition-colors duration-200;
-        }
-        .modal-buttons .confirm-button {
-            @apply bg-blue-500 hover:bg-blue-600 mr-2;
-        }
-        .modal-buttons .cancel-button {
-            @apply bg-gray-400 hover:bg-gray-500;
-        }
-        .modal-buttons .ok-button {
-            @apply bg-green-500 hover:bg-green-600;
+        #chartCanvas {
+            margin-top: 20px;
+            background-color: #1a1a2e;
+            border-radius: 10px;
+            max-width: 90%;
         }
     </style>
 </head>
-<body class="bg-gray-100 p-4 sm:p-6 md:p-8 flex flex-col items-center min-h-screen">
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6 text-center leading-tight">
-        Funcionários em Nuvem <span class="text-blue-600">☁️😎</span>
-    </h1>
-
-    <!-- Exibição do User ID para debugging e múltiplos usuários -->
-    <div id="userIdDisplay" class="text-sm text-gray-600 mb-4 text-center break-all">
-        ID do Usuário: Carregando...
-    </div>
-    
-    <div class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg mb-6">
-        <h3 id="formTitle" class="text-xl font-semibold text-gray-700 mb-4">Adicionar Funcionário</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="employeeName" placeholder="Nome do funcionário" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
-            <input type="text" id="employeeId" placeholder="Matrícula" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
-            <select id="employeeRole" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
-                <option value="" disabled selected>Selecione o cargo</option>
-                <option value="Coletor">Coletor</option>
-                <option value="Gari">Gari</option>
-                <option value="Motorista">Motorista</option>
-            </select>
-            <select id="employeeStatus" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
-                <option value="ativo" selected>Ativo</option>
-                <option value="inativo">Inativo</option>
-            </select>
-        </div>
-        <button id="formButton" onclick="saveEmployee()" class="mt-5 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Salvar na Nuvem</button>
-        <button id="cancelEditButton" style="display: none;" onclick="cancelEdit()" class="mt-3 w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Cancelar</button>
-    </div>
-    
-    <div class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg mb-6">
-        <h3 class="text-xl font-semibold text-gray-700 mb-4">Procurar Funcionário</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" id="searchInput" placeholder="Nome, matrícula ou cargo" onkeyup="searchEmployees()" class="md:col-span-3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none">
-            <select id="roleFilter" onchange="filterByRole()" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
-                <option value="">Todos os Cargos</option>
-                <option value="Coletor">Coletor</option>
-                <option value="Gari">Gari</option>
-                <option value="Motorista">Motorista</option>
-            </select>
-            <select id="statusFilter" onchange="filterByStatus()" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer">
-                <option value="">Todos os Status</option>
-                <option value="ativo">Ativos</option>
-                <option value="inativo">Inativos</option>
-            </select>
-            <button id="listAllButton" onclick="listAllEmployees()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md">Listar Todos</button>
-        </div>
-    </div>
-    
-    <p id="employeeCounter" class="text-lg font-semibold text-gray-700 mb-4">Total de funcionários na nuvem: 0 <span class="text-blue-600">☁️</span></p>
-    <ul id="employeeList" class="w-full max-w-2xl list-none p-0">
-        <!-- Itens da lista de funcionários serão inseridos aqui -->
-    </ul>
-
-    <!-- Modal para mensagens e confirmações -->
-    <div id="appModal" class="modal">
-        <div class="modal-content">
-            <h3 id="modalTitle"></h3>
-            <p id="modalMessage"></p>
-            <div id="modalButtons" class="modal-buttons">
-                <!-- Botões serão adicionados dinamicamente -->
-            </div>
-        </div>
+<body class="bg-gray-800 text-white flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="game-container rounded-lg shadow-xl p-6 bg-gray-700">
+        <h1 class="text-3xl font-bold mb-4 text-green-400">Snake.io 2D</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <p class="score-display">Pontuação: <span id="score">0</span></p>
+        <canvas id="chartCanvas" width="400" height="200" style="display: none;"></canvas>
     </div>
 
-    <!-- Firebase SDK - Versão modular (v9+) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, onSnapshot, FieldValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    <div id="gameEndMessage" class="game-message">
+        <p id="gameEndText"></p>
+        <button id="restartButton">Reiniciar Jogo</button>
+    </div>
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const gameEndMessage = document.getElementById('gameEndMessage');
+        const gameEndText = document.getElementById('gameEndText');
+        const restartButton = document.getElementById('restartButton');
+        const chartCanvas = document.getElementById('chartCanvas');
+        const chartCtx = chartCanvas.getContext('2d');
 
-        let app;
-        let db;
-        let auth;
-        let userId; // Will store the authenticated user's ID
-        let authReady = false; // Flag to indicate if authentication is ready
+        // Game settings
+        const mapWidth = 3000;
+        const mapHeight = 3000;
+        const segmentSize = 15;
+        let snake = [{ x: mapWidth / 2, y: mapHeight / 2 }];
+        let food = {};
+        let powerUps = [];
+        let score = 0;
+        let baseSpeed = 5;
+        let speed = baseSpeed;
+        let targetAngle = 0;
+        let currentAngle = 0;
+        let mousePos = { x: mapWidth / 2 + 50, y: mapHeight / 2 };
+        const camera = { x: 0, y: 0 };
+        let particles = [];
+        let gameRunning = true;
+        let scoreHistory = [{ time: 0, score: 0 }];
+        let gameTime = 0;
+        let lastScoreUpdate = 0;
 
-        // State to track editing
-        let editingEmployeeId = null;
-        let currentEditingLi = null;
+        // Boost
+        let isBoosting = false;
+        const boostCostPerFrame = 0.2;
+        const boostSpeedMultiplier = 2;
+        let boostCooldown = 0;
 
-        /**
-         * @function showModal
-         * @description Displays a custom modal with a given title, message, and type (alert or confirm).
-         * @param {string} title - The title of the modal.
-         * @param {string} message - The message to display in the modal.
-         * @param {'alert'|'confirm'} type - The type of modal ('alert' or 'confirm').
-         * @returns {Promise<boolean>} Resolves to true if 'OK'/'Confirm' is clicked, false if 'Cancel'.
-         */
-        function showModal(title, message, type) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('appModal');
-                const modalTitle = document.getElementById('modalTitle');
-                const modalMessage = document.getElementById('modalMessage');
-                const modalButtons = document.getElementById('modalButtons');
+        // AI snakes
+        let aiSnakes = [];
+        const maxAiSnakes = 5;
+        const aiInitialLength = 5;
 
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                modalButtons.innerHTML = ''; // Clear existing buttons
+        // Stars
+        const numStars = 200;
+        let stars = [];
 
-                if (type === 'alert') {
-                    const okButton = document.createElement('button');
-                    okButton.textContent = 'OK';
-                    okButton.className = 'ok-button';
-                    okButton.onclick = () => {
-                        modal.style.display = 'none';
-                        resolve(true);
-                    };
-                    modalButtons.appendChild(okButton);
-                } else if (type === 'confirm') {
-                    const confirmButton = document.createElement('button');
-                    confirmButton.textContent = 'Confirmar';
-                    confirmButton.className = 'confirm-button';
-                    confirmButton.onclick = () => {
-                        modal.style.display = 'none';
-                        resolve(true);
-                    };
+        // Initialize game
+        window.onload = function() {
+            resizeCanvas();
+            resetGame();
+            gameLoop();
+        };
 
-                    const cancelButton = document.createElement('button');
-                    cancelButton.textContent = 'Cancelar';
-                    cancelButton.className = 'cancel-button';
-                    cancelButton.onclick = () => {
-                        modal.style.display = 'none';
-                        resolve(false);
-                    };
-
-                    modalButtons.appendChild(confirmButton);
-                    modalButtons.appendChild(cancelButton);
-                }
-
-                modal.style.display = 'flex'; // Show the modal
-            });
-        }
-
-        /**
-         * @function checkDuplicateEmployeeId
-         * @description Checks if an employee ID already exists in Firestore, excluding a specific document during edits.
-         * @param {string} employeeId - The employee ID to check.
-         * @param {string|null} excludeDocId - The document ID to exclude from the check (for edits).
-         * @returns {Promise<boolean>} True if a duplicate is found, false otherwise.
-         */
-        async function checkDuplicateEmployeeId(employeeId, excludeDocId = null) {
-            try {
-                // Ensure auth is ready before attempting Firestore operations
-                if (!authReady) {
-                    console.warn("Firestore not ready. Authentication not complete.");
-                    return false; // Or throw an error, depending on desired behavior
-                }
-                const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
-                const q = query(employeesRef);
-                const querySnapshot = await new Promise((resolve, reject) => {
-                    const unsubscribe = onSnapshot(q, (snapshot) => {
-                        unsubscribe(); // Unsubscribe after the first snapshot
-                        resolve(snapshot);
-                    }, reject);
-                });
-
-                if (excludeDocId) {
-                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId && doc.data().employeeId === employeeId);
-                }
-                return !querySnapshot.empty && querySnapshot.docs.some(doc => doc.data().employeeId === employeeId);
-            } catch (error) {
-                console.error('Erro ao verificar matrícula:', error);
-                await showModal('Erro', 'Opa, algo deu errado ao verificar a matrícula!', 'alert');
-                return false;
+        // Resize canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = Math.min(800, container.clientWidth * 0.95);
+            canvas.height = Math.min(600, container.clientHeight * 0.8);
+            if (snake.length > 0) {
+                camera.x = snake[0].x - canvas.width / 2;
+                camera.y = snake[0].y - canvas.height / 2;
             }
         }
 
-        /**
-         * @function checkDuplicateEmployeeName
-         * @description Checks if an employee name already exists in Firestore, excluding a specific document during edits.
-         * @param {string} name - The employee name to check.
-         * @param {string|null} excludeDocId - The document ID to exclude from the check (for edits).
-         * @returns {Promise<boolean>} True if a duplicate is found, false otherwise.
-         */
-        async function checkDuplicateEmployeeName(name, excludeDocId = null) {
-            try {
-                // Ensure auth is ready before attempting Firestore operations
-                if (!authReady) {
-                    console.warn("Firestore not ready. Authentication not complete.");
+        window.addEventListener('resize', resizeCanvas);
+
+        // Mouse movement
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            mousePos.x = camera.x + (e.clientX - rect.left) * scaleX;
+            mousePos.y = camera.y + (e.clientY - rect.top) * scaleY;
+        });
+
+        // Boost
+        canvas.addEventListener('mousedown', () => {
+            if (gameRunning && boostCooldown === 0) isBoosting = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isBoosting = false;
+        });
+
+        // Restart
+        restartButton.addEventListener('click', () => {
+            gameEndMessage.style.display = 'none';
+            chartCanvas.style.display = 'none';
+            resetGame();
+            gameRunning = true;
+            gameLoop();
+        });
+
+        // Generate food
+        function generateFood() {
+            food = {
+                x: Math.random() * mapWidth,
+                y: Math.random() * mapHeight
+            };
+        }
+
+        // Generate power-up
+        function generatePowerUp() {
+            if (Math.random() < 0.005) {
+                powerUps.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    type: Math.random() < 0.5 ? 'speed' : 'shrink'
+                });
+            }
+        }
+
+        // Generate particles
+        function generateParticles(x, y, color = 'rgba(255, 255, 255, 0.7)', count = 10, size = 3, spread = 5) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * spread,
+                    vy: (Math.random() - 0.5) * spread,
+                    life: 30,
+                    color: color,
+                    size: size
+                });
+            }
+        }
+
+        // AI snakes
+        function createAiSnake() {
+            const startX = Math.random() * mapWidth;
+            const startY = Math.random() * mapHeight;
+            const newAiSnake = {
+                segments: [{ x: startX, y: startY }],
+                direction: Math.random() * Math.PI * 2,
+                speed: baseSpeed * 0.8,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                turnCooldown: 0
+            };
+            for (let i = 0; i < aiInitialLength - 1; i++) {
+                newAiSnake.segments.push({ x: startX - (i + 1) * segmentSize, y: startY });
+            }
+            aiSnakes.push(newAiSnake);
+        }
+
+        function updateAiSnakes() {
+            if (aiSnakes.length < maxAiSnakes && Math.random() < 0.001) {
+                createAiSnake();
+            }
+
+            aiSnakes = aiSnakes.filter(aiSnake => {
+                if (aiSnake.segments.length === 0) return false;
+
+                const head = { ...aiSnake.segments[0] };
+                aiSnake.turnCooldown--;
+                if (aiSnake.turnCooldown <= 0) {
+                    if (Math.random() < 0.5) {
+                        const angleToFood = Math.atan2(food.y - head.y, food.x - head.x);
+                        aiSnake.direction = angleToFood + (Math.random() - 0.5) * Math.PI / 4;
+                    } else {
+                        aiSnake.direction += (Math.random() - 0.5) * Math.PI / 2;
+                    }
+                    aiSnake.turnCooldown = Math.floor(Math.random() * 60) + 30;
+                }
+
+                head.x += Math.cos(aiSnake.direction) * aiSnake.speed;
+                head.y += Math.sin(aiSnake.direction) * aiSnake.speed;
+
+                if (head.x < 0) head.x += mapWidth;
+                if (head.x > mapWidth) head.x -= mapWidth;
+                if (head.y < 0) head.y += mapHeight;
+                if (head.y > mapHeight) head.y -= mapHeight;
+
+                aiSnake.segments.unshift(head);
+
+                if (Math.hypot(head.x - food.x, head.y - food.y) < segmentSize) {
+                    generateFood();
+                } else {
+                    aiSnake.segments.pop();
+                }
+
+                for (let i = 2; i < aiSnake.segments.length; i++) {
+                    if (Math.hypot(head.x - aiSnake.segments[i].x, head.y - aiSnake.segments[i].y) < segmentSize * 0.8) {
+                        generateParticles(head.x, head.y, aiSnake.color, 20, 5, 10);
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        // Stars
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    size: Math.random() * 2 + 1,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.1 + 0.05,
+                    direction: Math.random() * Math.PI * 2,
+                    life: Math.random() * 100 + 50
+                });
+            }
+        }
+
+        function updateStars() {
+            for (let star of stars) {
+                star.alpha = Math.abs(Math.sin(star.life / 50));
+                star.life = (star.life + star.speed) % 200;
+                star.x += Math.cos(star.direction) * 0.1;
+                star.y += Math.sin(star.direction) * 0.1;
+                if (star.x < 0) star.x = mapWidth;
+                if (star.x > mapWidth) star.x = 0;
+                if (star.y < 0) star.y = mapHeight;
+                if (star.y > mapHeight) star.y = 0;
+            }
+        }
+
+        // Update game state
+        function update() {
+            if (!gameRunning) return;
+
+            gameTime += 1 / 60;
+            if (gameTime - lastScoreUpdate >= 1) {
+                scoreHistory.push({ time: Math.floor(gameTime), score: Math.floor(score) });
+                lastScoreUpdate = gameTime;
+            }
+
+            const head = { ...snake[0] };
+            targetAngle = Math.atan2(mousePos.y - head.y, mousePos.x - head.x);
+            currentAngle += (targetAngle - currentAngle) * 0.1; // Smooth angle interpolation
+
+            let currentSpeed = baseSpeed + Math.min(snake.length * 0.05, 10);
+            if (isBoosting && score > boostCostPerFrame && boostCooldown === 0) {
+                currentSpeed *= boostSpeedMultiplier;
+                score = Math.max(0, score - boostCostPerFrame);
+                scoreDisplay.textContent = Math.floor(score);
+            } else {
+                isBoosting = false;
+            }
+
+            if (boostCooldown > 0) boostCooldown--;
+
+            head.x += Math.cos(currentAngle) * currentSpeed;
+            head.y += Math.sin(currentAngle) * currentSpeed;
+
+            if (head.x < 0 || head.x > mapWidth || head.y < 0 || head.y > mapHeight) {
+                gameOver("Você atingiu a borda do mapa!");
+                generateParticles(head.x, head.y, 'rgba(255, 0, 0, 0.8)', 50, 8, 15);
+                return;
+            }
+
+            for (let i = 2; i < snake.length; i++) {
+                if (Math.hypot(head.x - snake[i].x, head.y - snake[i].y) < segmentSize * 0.8) {
+                    gameOver("Você colidiu com você mesmo!");
+                    generateParticles(head.x, head.y, 'rgba(255, 0, 0, 0.8)', 50, 8, 15);
+                    return;
+                }
+            }
+
+            snake.unshift(head);
+
+            if (Math.hypot(head.x - food.x, head.y - food.y) < segmentSize) {
+                score += 10;
+                scoreDisplay.textContent = Math.floor(score);
+                generateFood();
+                generateParticles(food.x, food.y, '#9b59b6', 15, 4, 7);
+            } else {
+                snake.pop();
+            }
+
+            powerUps = powerUps.filter(p => {
+                if (Math.hypot(head.x - p.x, head.y - p.y) < segmentSize) {
+                    if (p.type === 'speed') {
+                        boostCooldown = 0;
+                        generateParticles(p.x, p.y, '#f1c40f', 15, 4, 7);
+                    } else if (p.type === 'shrink') {
+                        snake.length = Math.max(1, snake.length - 5);
+                        generateParticles(p.x, p.y, '#3498db', 15, 4, 7);
+                    }
                     return false;
                 }
-                const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
-                const q = query(employeesRef);
-                const querySnapshot = await new Promise((resolve, reject) => {
-                    const unsubscribe = onSnapshot(q, (snapshot) => {
-                        unsubscribe(); // Unsubscribe after the first snapshot
-                        resolve(snapshot);
-                    }, reject);
-                });
-
-                if (excludeDocId) {
-                    return querySnapshot.docs.some(doc => doc.id !== excludeDocId && doc.data().name === name.toUpperCase());
-                }
-                return !querySnapshot.empty && querySnapshot.docs.some(doc => doc.data().name === name.toUpperCase());
-            } catch (error) {
-                console.error('Erro ao verificar nome:', error);
-                await showModal('Erro', 'Opa, algo deu errado ao verificar o nome!', 'alert');
-                return false;
-            }
-        }
-
-        /**
-         * @function saveEmployee
-         * @description Adds a new employee or updates an existing one in Firestore.
-         */
-        async function saveEmployee() {
-            let name = document.getElementById('employeeName').value.trim().toUpperCase();
-            let employeeId = document.getElementById('employeeId').value.trim();
-            let role = document.getElementById('employeeRole').value;
-            let status = document.getElementById('employeeStatus').value;
-
-            // Basic validation
-            if (!name || !employeeId || !role) {
-                await showModal('Campos Obrigatórios', 'Preencha todos os campos, campeão! Não deixa a nuvem vazia! 😜', 'alert');
-                return;
-            }
-
-            try {
-                // Check for duplicate employee ID
-                const isDuplicateId = await checkDuplicateEmployeeId(employeeId, editingEmployeeId);
-                if (isDuplicateId) {
-                    await showModal('Matrícula Duplicada', 'Opa, essa matrícula já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
-                    return;
-                }
-
-                // Check for duplicate employee name
-                const isDuplicateName = await checkDuplicateEmployeeName(name, editingEmployeeId);
-                if (isDuplicateName) {
-                    await showModal('Nome Duplicado', 'Opa, esse nome já tá cadastrado! Tenta outro, campeão! 😜', 'alert');
-                    return;
-                }
-
-                // Employee data object
-                const employeeData = {
-                    name: name,
-                    employeeId: employeeId,
-                    role: role,
-                    status: status,
-                    timestamp: FieldValue.serverTimestamp()
-                };
-
-                if (editingEmployeeId) {
-                    // Update existing employee
-                    const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, editingEmployeeId);
-                    await updateDoc(employeeDocRef, employeeData);
-                    await showModal('Sucesso!', 'Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
-                } else {
-                    // Add new employee
-                    await addDoc(collection(db, `artifacts/${appId}/public/data/employees`), employeeData);
-                    await showModal('Sucesso!', 'Funcionário salvo na nuvem! Tá voando alto! 🚀', 'alert');
-                }
-
-                // Reset the form and reload employees
-                cancelEdit();
-            } catch (error) {
-                console.error('Erro ao salvar:', error);
-                await showModal('Erro ao Salvar', 'Opa, algo deu errado ao salvar! Erro: ' + error.message, 'alert');
-            }
-        }
-
-        /**
-         * @function cancelEdit
-         * @description Resets the form and cancels any ongoing edit operation.
-         */
-        function cancelEdit() {
-            editingEmployeeId = null;
-            document.getElementById('formTitle').textContent = 'Adicionar Funcionário';
-            document.getElementById('formButton').textContent = 'Salvar na Nuvem';
-            document.getElementById('cancelEditButton').style.display = 'none';
-            document.getElementById('employeeName').value = '';
-            document.getElementById('employeeId').value = '';
-            document.getElementById('employeeRole').value = '';
-            document.getElementById('employeeStatus').value = 'ativo';
-
-            // Remove highlight from any selected item
-            document.querySelectorAll('#employeeList li').forEach(item => {
-                item.classList.remove('selected');
-            });
-            if (currentEditingLi) {
-                currentEditingLi.classList.remove('edit-mode');
-                currentEditingLi = null;
-            }
-        }
-
-        /**
-         * @function editEmployee
-         * @description Populates the form with employee data for editing.
-         * @param {object} employee - The employee object to edit.
-         */
-        function editEmployee(employee) {
-            editingEmployeeId = employee.id;
-            document.getElementById('formTitle').textContent = 'Editar Funcionário';
-            document.getElementById('formButton').textContent = 'Atualizar';
-            document.getElementById('cancelEditButton').style.display = 'block';
-            document.getElementById('employeeName').value = employee.name || '';
-            document.getElementById('employeeId').value = employee.employeeId || '';
-            document.getElementById('employeeRole').value = employee.role || '';
-            document.getElementById('employeeStatus').value = employee.status || 'ativo';
-            // Focus on the name field for easy editing
-            document.getElementById('employeeName').focus();
-        }
-
-        /**
-         * @function deleteEmployee
-         * @description Deletes an employee from Firestore after user confirmation.
-         * @param {string} employeeId - The ID of the employee document to delete.
-         * @param {string} employeeName - The name of the employee for confirmation message.
-         */
-        async function deleteEmployee(employeeId, employeeName) {
-            const confirmed = await showModal('Confirmação', `Tem certeza que deseja apagar ${employeeName}? Essa ação não pode ser desfeita!`, 'confirm');
-            if (confirmed) {
-                try {
-                    const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, employeeId);
-                    await deleteDoc(employeeDocRef);
-                    await showModal('Sucesso!', 'Funcionário removido da nuvem! 😢', 'alert');
-                    // No need to call loadEmployees() as onSnapshot will handle it
-                } catch (error) {
-                    console.error('Erro ao apagar funcionário:', error);
-                    await showModal('Erro ao Apagar', 'Opa, algo deu errado ao apagar! Erro: ' + error.message, 'alert');
-                }
-            }
-        }
-
-        /**
-         * @function startInlineEdit
-         * @description Converts an employee list item into an editable form.
-         * @param {HTMLElement} li - The list item element to make editable.
-         * @param {object} employee - The employee data.
-         */
-        function startInlineEdit(li, employee) {
-            if (currentEditingLi) {
-                // If another item is being edited, revert it first.
-                const originalEmployeeData = JSON.parse(currentEditingLi.dataset.originalEmployee);
-                cancelInlineEdit(currentEditingLi, originalEmployeeData);
-            }
-            currentEditingLi = li;
-            li.classList.add('edit-mode');
-            li.dataset.originalEmployee = JSON.stringify(employee); // Store original data
-
-            let infoDiv = li.querySelector('.employee-info');
-            infoDiv.innerHTML = ''; // Clear current info
-
-            // Create input fields for inline editing
-            let nameInput = document.createElement('input');
-            nameInput.value = employee.name;
-            nameInput.className = 'p-1 border border-gray-300 rounded-md text-sm w-full md:w-auto flex-grow mr-1';
-            nameInput.placeholder = 'Nome';
-
-            let idInput = document.createElement('input');
-            idInput.value = employee.employeeId;
-            idInput.className = 'p-1 border border-gray-300 rounded-md text-sm w-24 mr-1';
-            idInput.placeholder = 'Matrícula';
-
-            let roleSelect = document.createElement('select');
-            roleSelect.className = 'p-1 border border-gray-300 rounded-md text-sm w-28 mr-1';
-            ['Coletor', 'Gari', 'Motorista'].forEach(role => {
-                let option = document.createElement('option');
-                option.value = role;
-                option.text = role;
-                if (role === employee.role) option.selected = true;
-                roleSelect.appendChild(option);
+                return true;
             });
 
-            let statusSelect = document.createElement('select');
-            statusSelect.className = 'p-1 border border-gray-300 rounded-md text-sm w-24 mr-1';
-            ['ativo', 'inativo'].forEach(status => {
-                let option = document.createElement('option');
-                option.value = status;
-                option.text = status.charAt(0).toUpperCase() + status.slice(1);
-                if (status === employee.status) option.selected = true;
-                statusSelect.appendChild(option);
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                return p.life > 0;
             });
 
-            // Append inputs to infoDiv
-            infoDiv.appendChild(nameInput);
-            infoDiv.appendChild(idInput);
-            infoDiv.appendChild(roleSelect);
-            infoDiv.appendChild(statusSelect);
+            generatePowerUp();
+            updateAiSnakes();
 
-            // Create Save and Cancel icons
-            let saveIcon = document.createElement('span');
-            saveIcon.textContent = '💾';
-            saveIcon.title = 'Salvar';
-            saveIcon.className = 'save-icon text-green-600 hover:text-green-800 text-lg cursor-pointer ml-2';
-            saveIcon.onclick = (e) => {
-                e.stopPropagation(); // Prevent li click event
-                saveInlineEdit(li, employee.id, nameInput.value, idInput.value, roleSelect.value, statusSelect.value);
-            };
-
-            let cancelIcon = document.createElement('span');
-            cancelIcon.textContent = '🚫';
-            cancelIcon.title = 'Cancelar';
-            cancelIcon.className = 'cancel-icon text-gray-500 hover:text-gray-700 text-lg cursor-pointer ml-1';
-            cancelIcon.onclick = (e) => {
-                e.stopPropagation(); // Prevent li click event
-                const originalData = JSON.parse(li.dataset.originalEmployee);
-                cancelInlineEdit(li, originalData);
-            };
-
-            // Replace existing icons with Save and Cancel
-            const existingEditIcon = li.querySelector('.edit-icon');
-            const existingDeleteIcon = li.querySelector('.delete-icon');
-            if (existingEditIcon) existingEditIcon.remove();
-            if (existingDeleteIcon) existingDeleteIcon.remove();
-
-            li.appendChild(saveIcon);
-            li.appendChild(cancelIcon);
-        }
-
-        /**
-         * @function saveInlineEdit
-         * @description Saves inline edited employee data to Firestore.
-         * @param {HTMLElement} li - The list item element.
-         * @param {string} employeeId - The ID of the employee document.
-         * @param {string} newName - The new name.
-         * @param {string} newEmployeeId - The new employee ID.
-         * @param {string} newRole - The new role.
-         * @param {string} newStatus - The new status.
-         */
-        async function saveInlineEdit(li, employeeId, newName, newEmployeeId, newRole, newStatus) {
-            newName = newName.trim().toUpperCase();
-            newEmployeeId = newEmployeeId.trim();
-
-            if (!newName || !newEmployeeId || !newRole) {
-                await showModal('Campos Obrigatórios', 'Preencha todos os campos da edição em linha!', 'alert');
-                return;
-            }
-
-            try {
-                // Check for duplicate employee ID
-                const isDuplicateId = await checkDuplicateEmployeeId(newEmployeeId, employeeId);
-                if (isDuplicateId) {
-                    await showModal('Matrícula Duplicada', 'Opa, essa matrícula já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
-                    return;
-                }
-                // Check for duplicate employee name
-                const isDuplicateName = await checkDuplicateEmployeeName(newName, employeeId);
-                if (isDuplicateName) {
-                    await showModal('Nome Duplicado', 'Opa, esse nome já tá cadastrada! Tenta outra, campeão! 😜', 'alert');
-                    return;
-                }
-
-                const employeeDocRef = doc(db, `artifacts/${appId}/public/data/employees`, employeeId);
-                await updateDoc(employeeDocRef, {
-                    name: newName,
-                    employeeId: newEmployeeId,
-                    role: newRole,
-                    status: newStatus,
-                    timestamp: FieldValue.serverTimestamp()
-                });
-                await showModal('Sucesso!', 'Funcionário atualizado na nuvem! Tá voando alto! 🚀', 'alert');
-                currentEditingLi = null; // Reset editing state
-            } catch (error) {
-                console.error('Erro ao salvar edição em linha:', error);
-                await showModal('Erro ao Salvar', 'Opa, algo deu errado! Erro: ' + error.message, 'alert');
-            }
-        }
-
-        /**
-         * @function cancelInlineEdit
-         * @description Cancels inline editing and reverts the list item to display mode.
-         * @param {HTMLElement} li - The list item element.
-         * @param {object} employee - The original employee data to restore.
-         */
-        function cancelInlineEdit(li, employee) {
-            li.classList.remove('edit-mode');
-            delete li.dataset.originalEmployee; // Remove stored original data
-
-            let infoDiv = li.querySelector('.employee-info');
-            // Reconstruct the display HTML for the employee
-            infoDiv.innerHTML = `${getRoleIcon(employee.role)} <span class="employee-name">${employee.name}</span> <span class="employee-id-role">-${employee.employeeId} - ${employee.role}</span><span class="employee-status ${employee.status === 'inativo' ? 'text-red-500' : 'text-green-600'}"> (${employee.status.charAt(0).toUpperCase() + employee.status.slice(1)})</span>`;
-
-            // Recreate original action icons (edit and delete)
-            const saveIcon = li.querySelector('.save-icon');
-            const cancelIcon = li.querySelector('.cancel-icon');
-            if (saveIcon) saveIcon.remove();
-            if (cancelIcon) cancelIcon.remove();
-
-            let editIcon = document.createElement('span');
-            editIcon.textContent = '✏️';
-            editIcon.title = 'Editar';
-            editIcon.className = 'edit-icon text-blue-600 hover:text-blue-800 text-lg cursor-pointer ml-2';
-            editIcon.onclick = (e) => {
-                e.stopPropagation();
-                startInlineEdit(li, employee);
-            };
-
-            let deleteIcon = document.createElement('span');
-            deleteIcon.textContent = '🗑️';
-            deleteIcon.title = 'Excluir';
-            deleteIcon.className = 'delete-icon text-red-500 hover:text-red-700 text-lg cursor-pointer ml-1';
-            deleteIcon.onclick = (e) => {
-                e.stopPropagation();
-                deleteEmployee(employee.id, employee.name);
-            };
-
-            li.appendChild(editIcon);
-            li.appendChild(deleteIcon);
-            currentEditingLi = null; // Reset editing state
-        }
-
-
-        /**
-         * @function getRoleIcon
-         * @description Returns an emoji icon based on the employee's role.
-         * @param {string} role - The employee's role.
-         * @returns {string} The corresponding emoji.
-         */
-        function getRoleIcon(role) {
-            switch (role) {
-                case 'Gari': return '🧹';
-                case 'Motorista': return '🚛';
-                case 'Coletor': return '🗑️';
-                default: return '';
-            }
-        }
-
-        /**
-         * @function loadEmployees
-         * @description Fetches and displays employees from Firestore based on current filters.
-         * Uses onSnapshot for real-time updates.
-         * @param {string} queryText - Text to search for in name, ID, or role.
-         * @param {string} roleFilter - Filter by employee role.
-         * @param {string} statusFilter - Filter by employee status.
-         */
-        function loadEmployees(queryText = '', roleFilter = '', statusFilter = '') {
-            // Ensure auth is ready before attempting Firestore operations
-            if (!authReady) {
-                console.warn("Firestore not ready. Authentication not complete.");
-                return;
-            }
-
-            const employeeListUl = document.getElementById('employeeList');
-            const employeeCounterP = document.getElementById('employeeCounter');
-            
-            // Reference to the 'employees' collection
-            const employeesRef = collection(db, `artifacts/${appId}/public/data/employees`);
-            const q = query(employeesRef); // Initial query without specific where clauses for onSnapshot
-
-            // Set up real-time listener
-            onSnapshot(q, (snapshot) => {
-                let employees = [];
-                snapshot.forEach(doc => {
-                    const employee = doc.data();
-                    // Basic validation for required fields
-                    if (!employee.employeeId || !employee.name || !employee.role) {
-                        console.warn(`Document ${doc.id} possui campos ausentes ou inválidos:`, employee);
-                        return; // Skip this document if essential fields are missing
+            aiSnakes = aiSnakes.filter(aiSnake => {
+                const aiHead = aiSnake.segments[0];
+                for (let i = 0; i < aiSnake.segments.length; i++) {
+                    if (Math.hypot(head.x - aiSnake.segments[i].x, head.y - aiSnake.segments[i].y) < segmentSize * 0.9) {
+                        if (snake.length > aiSnake.segments.length * 1.5) {
+                            score += aiSnake.segments.length * 5;
+                            scoreDisplay.textContent = Math.floor(score);
+                            generateParticles(aiHead.x, aiHead.y, aiSnake.color, 30, 6, 12);
+                            return false;
+                        } else {
+                            gameOver("Você colidiu com uma entidade inimiga!");
+                            generateParticles(head.x, head.y, 'rgba(255, 0, 0, 0.8)', 50, 8, 15);
+                            return true;
+                        }
                     }
-                    employees.push({
-                        id: doc.id,
-                        name: employee.name,
-                        employeeId: employee.employeeId,
-                        role: employee.role,
-                        status: employee.status || 'ativo' // Default to 'ativo' if status is missing
-                    });
-                });
-
-                // Apply in-memory filtering (due to Firestore query limitations and avoiding index creation issues)
-                const filteredEmployees = employees.filter(employee => {
-                    const lowerCaseQuery = queryText.toLowerCase();
-                    const nameMatches = employee.name.toLowerCase().includes(lowerCaseQuery);
-                    const idMatches = employee.employeeId.toLowerCase().includes(lowerCaseQuery);
-                    const roleMatches = employee.role.toLowerCase().includes(lowerCaseQuery);
-                    
-                    const matchesQuery = (queryText === '' || nameMatches || idMatches || roleMatches);
-                    const matchesRole = (roleFilter === '' || employee.role === roleFilter);
-                    const matchesStatus = (statusFilter === '' || employee.status === statusFilter);
-
-                    return matchesQuery && matchesRole && matchesStatus;
-                });
-
-                // Sort by employeeId in ascending order (in-memory)
-                filteredEmployees.sort((a, b) => {
-                    const idA = a.employeeId || '';
-                    const idB = b.employeeId || '';
-                    // Handle numeric part of IDs correctly (e.g., "001" vs "10")
-                    const numIdA = parseInt(idA.replace(/\D/g, ''), 10) || 0;
-                    const numIdB = parseInt(idB.replace(/\D/g, ''), 10) || 0;
-
-                    if (numIdA !== numIdB) {
-                        return numIdA - numIdB;
-                    }
-                    // Fallback to string comparison if numeric parts are identical (for cases like "A1" vs "A2")
-                    return idA.localeCompare(idB);
-                });
-
-                // Update UI
-                employeeCounterP.textContent = `Total de funcionários na nuvem: ${filteredEmployees.length} ☁️`;
-                employeeListUl.innerHTML = ''; // Clear current list
-
-                if (filteredEmployees.length === 0) {
-                    const noResultsLi = document.createElement('li');
-                    noResultsLi.className = 'bg-white p-4 rounded-lg shadow-md text-center text-gray-500 italic';
-                    noResultsLi.textContent = 'Nenhum funcionário encontrado. Tenta de novo! 😅';
-                    employeeListUl.appendChild(noResultsLi);
-                } else {
-                    filteredEmployees.forEach(employee => {
-                        const li = document.createElement('li');
-                        li.id = `employee-${employee.id}`; // Add a unique ID for easy access
-                        li.className = `flex items-center justify-between p-4 mb-2 bg-white rounded-lg shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:bg-gray-50 ${employee.status === 'inativo' ? 'opacity-80' : ''}`;
-                        li.classList.toggle('inactive', employee.status === 'inativo');
-
-                        const infoDiv = document.createElement('div');
-                        infoDiv.className = 'employee-info flex items-center flex-grow flex-wrap';
-                        
-                        // Role Icon
-                        const roleIconSpan = document.createElement('span');
-                        roleIconSpan.textContent = getRoleIcon(employee.role);
-                        roleIconSpan.className = 'mr-2 text-xl';
-
-                        // Employee Name
-                        const nameSpan = document.createElement('span');
-                        nameSpan.className = 'employee-name font-semibold text-gray-800 text-base mr-2';
-                        nameSpan.textContent = employee.name;
-
-                        // Employee ID and Role
-                        const idRoleSpan = document.createElement('span');
-                        idRoleSpan.className = 'employee-id-role text-gray-600 text-sm break-all mr-2';
-                        idRoleSpan.textContent = `(${employee.employeeId} - ${employee.role})`;
-
-                        // Employee Status
-                        const statusSpan = document.createElement('span');
-                        statusSpan.className = `employee-status text-sm italic ${employee.status === 'inativo' ? 'text-red-500' : 'text-green-600'}`;
-                        statusSpan.textContent = `(${employee.status.charAt(0).toUpperCase() + employee.status.slice(1)})`;
-
-                        infoDiv.appendChild(roleIconSpan);
-                        infoDiv.appendChild(nameSpan);
-                        infoDiv.appendChild(idRoleSpan);
-                        infoDiv.appendChild(statusSpan);
-                        
-                        // Action Icons Container
-                        const actionIconsDiv = document.createElement('div');
-                        actionIconsDiv.className = 'flex-shrink-0 flex items-center ml-auto';
-
-                        // Edit Icon
-                        const editIcon = document.createElement('span');
-                        editIcon.textContent = '✏️'; // Pencil emoji
-                        editIcon.title = 'Editar';
-                        editIcon.className = 'edit-icon text-blue-600 hover:text-blue-800 text-lg cursor-pointer ml-2';
-                        editIcon.onclick = (e) => {
-                            e.stopPropagation(); // Prevent li click event from firing
-                            startInlineEdit(li, employee);
-                        };
-
-                        // Delete Icon
-                        const deleteIcon = document.createElement('span');
-                        deleteIcon.textContent = '🗑️'; // Wastebasket emoji
-                        deleteIcon.title = 'Excluir';
-                        deleteIcon.className = 'delete-icon text-red-500 hover:text-red-700 text-lg cursor-pointer ml-1';
-                        deleteIcon.onclick = (e) => {
-                            e.stopPropagation(); // Prevent li click event from firing
-                            deleteEmployee(employee.id, employee.name);
-                        };
-
-                        actionIconsDiv.appendChild(editIcon);
-                        actionIconsDiv.appendChild(deleteIcon);
-
-                        li.appendChild(infoDiv);
-                        li.appendChild(actionIconsDiv);
-
-                        // Click handler for selecting an employee (to populate the main form)
-                        li.onclick = (e) => {
-                            // Only select if not in inline edit mode and not clicking action icons
-                            if (!li.classList.contains('edit-mode') && 
-                                e.target !== editIcon && e.target !== deleteIcon &&
-                                e.target.parentElement !== actionIconsDiv) {
-                                
-                                document.querySelectorAll('#employeeList li').forEach(item => {
-                                    item.classList.remove('selected', 'border-2', 'border-blue-500', 'bg-blue-50');
-                                });
-                                li.classList.add('selected', 'border-2', 'border-blue-500', 'bg-blue-50');
-                                editEmployee(employee);
-                                document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-                            }
-                        };
-                        employeeListUl.appendChild(li);
-                    });
                 }
-            }, (error) => {
-                console.error('Erro ao carregar lista em tempo real:', error);
-                let errorMessage = error.message || 'Erro desconhecido';
-                if (error.code === 'permission-denied') {
-                    errorMessage = 'Você não tem permissão para acessar esses dados. Verifique as regras de segurança do Firestore.';
-                } else if (error.code === 'failed-precondition') {
-                    errorMessage = 'Índice do Firestore ausente. Acesse o Firebase Console e crie um índice composto para "employees" com "employeeId" (asc) e "name" (asc).';
-                }
-                showModal('Erro ao Carregar', 'Opa, algo deu errado ao carregar a lista: ' + errorMessage, 'alert');
+                return true;
             });
-        }
 
-        /**
-         * @function searchEmployees
-         * @description Triggers a reload of employees with the current search query and filters.
-         * Called on 'keyup' for the search input.
-         */
-        function searchEmployees() {
-            const query = document.getElementById('searchInput').value.trim();
-            const roleFilter = document.getElementById('roleFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            loadEmployees(query, roleFilter, statusFilter);
-        }
-
-        /**
-         * @function filterByRole
-         * @description Triggers a reload of employees with the current role filter.
-         * Called on 'change' for the role select.
-         */
-        function filterByRole() {
-            searchEmployees(); // Reuse searchEmployees as it gathers all filters
-        }
-
-        /**
-         * @function filterByStatus
-         * @description Triggers a reload of employees with the current status filter.
-         * Called on 'change' for the status select.
-         */
-        function filterByStatus() {
-            searchEmployees(); // Reuse searchEmployees as it gathers all filters
-        }
-
-        /**
-         * @function listAllEmployees
-         * @description Resets all search and filter inputs and reloads all employees.
-         */
-        function listAllEmployees() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('roleFilter').value = '';
-            document.getElementById('statusFilter').value = '';
-            loadEmployees('', '', ''); // Load all employees
-        }
-
-        // Initialize Firebase and set up authentication
-        async function initializeFirebaseAndAuth() {
-            try {
-                // Initialize Firebase app
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Check for initial auth token provided by the environment
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log("Signed in with custom token.");
-                } else {
-                    await signInAnonymously(auth);
-                    console.log("Signed in anonymously.");
-                }
-
-                // Listen for authentication state changes
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('userIdDisplay').textContent = `ID do Usuário: ${userId}`;
-                        authReady = true; // Set flag to true once authentication is confirmed
-                        console.log("Auth state changed. User ID:", userId);
-                        loadEmployees(); // Load employees only after authentication is ready
-                    } else {
-                        userId = null;
-                        document.getElementById('userIdDisplay').textContent = `ID do Usuário: Não autenticado`;
-                        authReady = false;
-                        console.log("Auth state changed. No user.");
-                        // Handle unauthenticated state if necessary (e.g., clear list)
-                        document.getElementById('employeeList').innerHTML = '<li class="bg-white p-4 rounded-lg shadow-md text-center text-gray-500 italic">Por favor, autentique-se para ver os funcionários.</li>';
-                        document.getElementById('employeeCounter').textContent = 'Total de funcionários na nuvem: 0 ☁️';
+            for (let i = 0; i < aiSnakes.length; i++) {
+                const aiSnake = aiSnakes[i];
+                const aiHead = aiSnake.segments[0];
+                for (let j = 0; j < snake.length; j++) {
+                    if (Math.hypot(aiHead.x - snake[j].x, aiHead.y - snake[j].y) < segmentSize * 0.9) {
+                        if (aiSnake.segments.length > snake.length * 1.5) {
+                            gameOver("Uma entidade inimiga maior te devorou!");
+                            generateParticles(head.x, head.y, 'rgba(255, 0, 0, 0.8)', 50, 8, 15);
+                            aiSnakes.splice(i, 1);
+                            return;
+                        } else {
+                            generateParticles(aiHead.x, aiHead.y, aiSnake.color, 30, 6, 12);
+                            aiSnakes.splice(i, 1);
+                            i--;
+                            break;
+                        }
                     }
-                });
-            } catch (error) {
-                console.error("Error initializing Firebase or signing in:", error);
-                await showModal('Erro de Inicialização', 'Opa, não consegui iniciar o sistema! Erro: ' + error.message, 'alert');
+                }
+            }
+
+            updateStars();
+
+            camera.x = head.x - canvas.width / 2;
+            camera.y = head.y - canvas.height / 2;
+            camera.x = Math.max(0, Math.min(camera.x, mapWidth - canvas.width));
+            camera.y = Math.max(0, Math.min(camera.y, mapHeight - canvas.height));
+        }
+
+        // Draw
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            bgGradient.addColorStop(0, '#1a1a2e');
+            bgGradient.addColorStop(1, '#0f0f2b');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let star of stars) {
+                const starX = star.x - camera.x;
+                const starY = star.y - camera.y;
+                if (starX > -star.size && starX < canvas.width + star.size &&
+                    starY > -star.size && starY < canvas.height + star.size) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(starX, starY, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            const gridSize = 50;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let x = -camera.x % gridSize; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = -camera.y % gridSize; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(mousePos.x - camera.x, mousePos.y - camera.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            for (let p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x - camera.x, p.y - camera.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            for (let aiSnake of aiSnakes) {
+                for (let i = 0; i < aiSnake.segments.length; i++) {
+                    const alpha = 1 - (i / aiSnake.segments.length) * 0.5;
+                    ctx.fillStyle = `hsla(${aiSnake.color.substring(4, aiSnake.color.indexOf(','))}, 70%, 50%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(aiSnake.segments[i].x - camera.x, aiSnake.segments[i].y - camera.y, segmentSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = `hsla(${aiSnake.color.substring(4, aiSnake.color.indexOf(','))}, 70%, 40%, ${alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            for (let i = 0; i < snake.length; i++) {
+                const alpha = 1 - (i / snake.length) * 0.5;
+                ctx.fillStyle = `rgba(46, 204, 113, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(snake[i].x - camera.x, snake[i].y - camera.y, segmentSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                if (isBoosting) {
+                    ctx.save();
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `rgba(0, 255, 0, ${alpha})`;
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.strokeStyle = `rgba(39, 174, 96, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#9b59b6';
+            ctx.beginPath();
+            ctx.arc(food.x - camera.x, food.y - camera.y, segmentSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#8e44ad';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.font = `${segmentSize * 0.8}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'white';
+            ctx.fillText('💎', food.x - camera.x, food.y - camera.y);
+
+            for (let p of powerUps) {
+                let color, borderColor, icon;
+                if (p.type === 'speed') {
+                    color = '#f1c40f';
+                    borderColor = '#f39c12';
+                    icon = '⚡';
+                } else {
+                    color = '#3498db';
+                    borderColor = '#2980b9';
+                    icon = '⬇️';
+                }
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(p.x - camera.x, p.y - camera.y, segmentSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.font = `${segmentSize * 0.8}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'white';
+                ctx.fillText(icon, p.x - camera.x, p.y - camera.y);
             }
         }
 
-        // Call the initialization function when the window loads
-        window.onload = initializeFirebaseAndAuth;
+        // Game over
+        function gameOver(message) {
+            gameRunning = false;
+            gameEndText.textContent = `Fim de Jogo! ${message} Sua pontuação final foi: ${Math.floor(score)}`;
+            gameEndMessage.style.display = 'block';
+            chartCanvas.style.display = 'block';
+            drawChart();
+        }
 
-        // Make functions globally accessible for inline HTML event handlers
-        window.saveEmployee = saveEmployee;
-        window.cancelEdit = cancelEdit;
-        window.editEmployee = editEmployee;
-        window.deleteEmployee = deleteEmployee;
-        window.searchEmployees = searchEmployees;
-        window.filterByRole = filterByRole;
-        window.filterByStatus = filterByStatus;
-        window.listAllEmployees = listAllEmployees;
-        window.showModal = showModal; // Expose modal for debugging if needed
-        window.startInlineEdit = startInlineEdit;
-        window.saveInlineEdit = saveInlineEdit;
-        window.cancelInlineEdit = cancelInlineEdit;
+        // Reset game
+        function resetGame() {
+            snake = [{ x: mapWidth / 2, y: mapHeight / 2 }];
+            generateFood();
+            powerUps = [];
+            score = 0;
+            speed = baseSpeed;
+            scoreHistory = [{ time: 0, score: 0 }];
+            gameTime = 0;
+            lastScoreUpdate = 0;
+            scoreDisplay.textContent = score;
+            mousePos = { x: mapWidth / 2 + 50, y: mapHeight / 2 };
+            isBoosting = false;
+            boostCooldown = 0;
+            particles = [];
+            aiSnakes = [];
+            initStars();
+            camera.x = snake[0].x - canvas.width / 2;
+            camera.y = snake[0].y - canvas.height / 2;
+        }
 
-        // IMPORTANT: The `loadEmployees` function is now called inside `onAuthStateChanged` to ensure Firestore is ready.
-        // It should NOT be called directly here.
+        // Chart
+        let chart = null;
+        function drawChart() {
+            if (chart) chart.destroy();
+            chart = new Chart(chartCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Pontuação ao Longo do Tempo',
+                        data: scoreHistory.map(entry => ({ x: entry.time, y: entry.score })),
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: 'Tempo (segundos)', color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            ticks: { color: '#fff' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Pontuação', color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            ticks: { color: '#fff' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+
+        // Main game loop
+        function gameLoop() {
+            if (gameRunning) {
+                update();
+                draw();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start game
+        gameLoop();
     </script>
 </body>
 </html>
