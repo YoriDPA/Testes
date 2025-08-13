@@ -120,6 +120,12 @@
         #score-popup.show {
             opacity: 1;
         }
+        #score-popup.record-beaten {
+            background-color: rgba(37, 211, 102, 0.85);
+            color: #fff;
+            font-size: 1.1rem;
+            padding: 15px 30px;
+        }
         #game-info {
             position: absolute;
             top: 60px;
@@ -338,7 +344,7 @@
     <div id="modal-overlay" class="overlay">
         <div class="modal-content">
             <h1 id="modal-title">NEON TETRIS</h1>
-            <p id="modal-text">Controles: Setas (PC) ou Toque/Arraste (Celular). Toque duplo para descida rápida.</p>
+            <p id="modal-text">Controles: Setas (PC) ou Toque/Arraste (Celular).</p>
             <div id="game-over-content" class="hidden">
                 <input type="text" id="player-name-input" placeholder="Digite seu nome" maxlength="10">
                 <button id="save-score-button">Salvar Recorde</button>
@@ -421,7 +427,7 @@
             let isGameOver = true;
             let isPaused = false;
             let pauseCountdown = 0;
-            let animationFrameId, scoreTimeout, lineClearTimeout;
+            let animationFrameId, scoreTimeout, lineClearTimeout, recordBeatenTimeout;
 
             let audioInitialized = false;
             let musicSynth, scoreSynth, musicLoop;
@@ -642,7 +648,7 @@
                 if (clearedLines > 0) {
                     if (scoreSynth) {
                         scoreSynth.triggerAttackRelease("C5", "8n");
-                        scoreSynth.triggerAttackRelease("F5", "8n", "+0.1"); // Som adicional para linha
+                        scoreSynth.triggerAttackRelease("F5", "8n", "+0.1");
                     }
                     drawLineClearEffect(clearedLineIndices);
                     lines += clearedLines;
@@ -664,7 +670,6 @@
             function update(time = 0) {
                 if (isGameOver || isPaused) {
                     if (pauseCountdown > 0) {
-                        // Exibe contagem regressiva
                         const countdownValue = Math.ceil(pauseCountdown / 1000);
                         drawPauseCountdown(countdownValue);
                         pauseCountdown -= time - lastTime;
@@ -852,7 +857,6 @@
 
                 if (userDocSnap.exists() && userDocSnap.data().name) {
                     const playerName = userDocSnap.data().name;
-                    modalText.innerText += `\nRecorde salvo para ${playerName}.`;
                     gameOverContent.classList.add('hidden');
                     await updatePlayerBestScore(userId, playerName, score);
                 } else {
@@ -863,10 +867,45 @@
                 }
             }
             
+            async function findBeatenRecord(newScore) {
+                if (!db) return null;
+                try {
+                    const scoresCollection = collection(db, `/artifacts/${persistentAppId}/public/data/tetris_highscores`);
+                    const q = query(scoresCollection, orderBy("score", "desc"), limit(10));
+                    const querySnapshot = await getDocs(q);
+                    
+                    let beatenRecord = null;
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if (data.score < newScore && data.score > 0 && !beatenRecord) {
+                            beatenRecord = { name: data.name, score: data.score };
+                        }
+                    });
+                    return beatenRecord;
+                } catch (e) {
+                    console.error("Erro ao buscar recordes superados:", e);
+                    return null;
+                }
+            }
+
             async function updatePlayerBestScore(userId, name, newScore) {
                 if (!db) return;
                 const scoreDocRef = doc(db, `/artifacts/${persistentAppId}/public/data/tetris_highscores/${userId}`);
                 const scoreDocSnap = await getDoc(scoreDocRef);
+
+                const beatenRecord = await findBeatenRecord(newScore);
+                if (beatenRecord) {
+                    scorePopup.classList.remove('show');
+                    if (recordBeatenTimeout) clearTimeout(recordBeatenTimeout);
+                    scoreEl.textContent = `Você superou o recorde de ${beatenRecord.name}!`;
+                    scorePopup.classList.add('record-beaten');
+                    scorePopup.classList.add('show');
+                    recordBeatenTimeout = setTimeout(() => {
+                        scorePopup.classList.remove('show');
+                        scorePopup.classList.remove('record-beaten');
+                        scoreEl.textContent = score;
+                    }, 3000);
+                }
 
                 if (scoreDocSnap.exists()) {
                     const oldScore = scoreDocSnap.data().score;
