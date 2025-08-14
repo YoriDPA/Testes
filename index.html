@@ -183,7 +183,6 @@
     // --- Configurações e Elementos do DOM ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    // ... (restantes elementos do DOM)
     const leaderboardList = document.getElementById('leaderboard-list');
     const scoreElement = document.getElementById('score');
     const snakesAliveElement = document.getElementById('snakes-alive');
@@ -229,7 +228,7 @@
             x, y, color,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            life: 60, // Duração em frames
+            life: 60,
             alpha: 1
         };
     }
@@ -284,16 +283,18 @@
     }
 
     function drawAll() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        // Limpa o ecrã
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         ctx.save();
-        // Aplica a transformação da câmara
-        ctx.translate(width / 2, height / 2);
+        // Aplica a transformação da câmara: move para o centro, aplica zoom, e move para a posição do jogador
+        ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
         ctx.scale(camera.zoom, camera.zoom);
-        if(player) ctx.translate(-player.body[0].x, -player.body[0].y);
+        if(player) {
+            ctx.translate(-player.body[0].x, -player.body[0].y);
+        }
         
+        // Desenha todos os elementos do mundo
         drawWorldBackground();
         pellets.forEach(p => drawCircle(p.x, p.y, p.radius, p.color));
         if (player) drawSnake(player);
@@ -302,7 +303,7 @@
         
         ctx.restore();
         
-        // UI é desenhada por cima, sem transformação da câmara
+        // A UI é desenhada por cima de tudo, sem transformação
         updateLeaderboard();
         updateUI();
     }
@@ -317,8 +318,7 @@
         for (let i = 0; i < snake.body.length - 1; i++) {
             const segment = snake.body[i];
             const nextSegment = snake.body[i + 1];
-            // A espessura da cauda diminui
-            ctx.lineWidth = snake.radius * 2 * (1 - i / snake.body.length);
+            ctx.lineWidth = snake.radius * 2 * (1 - i / snake.body.length); // Cauda afina
             ctx.beginPath();
             ctx.moveTo(segment.x, segment.y);
             ctx.lineTo(nextSegment.x, nextSegment.y);
@@ -326,20 +326,102 @@
         }
     }
     
-    function drawCircle(x, y, radius, color) { /* ... (sem alterações) ... */ }
+    function drawCircle(x, y, radius, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
     function drawParticle(p) {
         ctx.globalAlpha = p.alpha;
         drawCircle(p.x, p.y, 2, p.color);
         ctx.globalAlpha = 1;
     }
-    function drawWorldBackground() { /* ... (sem alterações) ... */ }
+
+    function drawWorldBackground() {
+        ctx.strokeStyle = "#33ff33";
+        ctx.lineWidth = 10;
+        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+        ctx.lineWidth = 2;
+        const gridSize = 50;
+        for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, WORLD_HEIGHT);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= WORLD_HEIGHT; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(WORLD_WIDTH, y);
+            ctx.stroke();
+        }
+    }
 
     // --- Lógica de Atualização ---
-    function handleInput() { /* ... (sem alterações) ... */ }
-    function updatePlayer() { if (player) moveSnake(player); }
-    function updateBots() { /* ... (sem alterações) ... */ }
-    function moveSnake(snake) { /* ... (sem alterações) ... */ }
-    function updatePellets() { /* ... (sem alterações) ... */ }
+    function handleInput() {
+        if (!player) return;
+        if (!isMobile) {
+            if (keys.ArrowLeft) player.angle -= player.turnSpeed;
+            if (keys.ArrowRight) player.angle += player.turnSpeed;
+        }
+        player.isBoosting = keys.Space;
+    }
+
+    function updatePlayer() { 
+        if (player) moveSnake(player); 
+    }
+
+    function updateBots() {
+        bots.forEach(bot => {
+            if (!bot.targetPellet || Math.random() < 0.005) {
+                bot.targetPellet = findClosestPellet(bot);
+            }
+            if (bot.targetPellet) {
+                const targetAngle = Math.atan2(bot.targetPellet.y - bot.body[0].y, bot.targetPellet.x - bot.body[0].x);
+                bot.angle += Math.sign(targetAngle - bot.angle) * bot.turnSpeed * 0.5;
+            }
+            moveSnake(bot);
+        });
+    }
+
+    function moveSnake(snake) {
+        const currentSpeed = snake.isBoosting ? 2 * snake.speed : snake.speed;
+        const head = snake.body[0];
+        const newHead = {
+            x: head.x + Math.cos(snake.angle) * currentSpeed,
+            y: head.y + Math.sin(snake.angle) * currentSpeed
+        };
+        snake.body.unshift(newHead);
+        const snakeLength = 15 + snake.score;
+        while (snake.body.length > snakeLength && snake.body.length > 2) {
+            snake.body.pop();
+        }
+    }
+
+    function updatePellets() {
+        const allSnakes = [player, ...bots].filter(s => s);
+        pellets.forEach(p => {
+            p.vx *= 0.95;
+            p.vy *= 0.95;
+            allSnakes.forEach(snake => {
+                if (!snake) return;
+                const head = snake.body[0];
+                const distance = Math.hypot(p.x - head.x, p.y - head.y);
+                if (distance < snake.attractionRadius) {
+                    const dx = head.x - p.x;
+                    const dy = head.y - p.y;
+                    p.vx += (dx / distance) * snake.attractionSpeed;
+                    p.vy += (dy / distance) * snake.attractionSpeed;
+                }
+            });
+            p.x += p.vx;
+            p.y += p.vy;
+        });
+    }
+
     function updateParticles() {
         for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
@@ -350,6 +432,7 @@
             if (p.life <= 0) particles.splice(i, 1);
         }
     }
+
     function updateCamera() {
         if (!player) return;
         const targetZoom = 1 - (player.body.length / 800);
@@ -357,7 +440,40 @@
     }
 
     // --- Colisões e Estado do Jogo ---
-    function checkCollisions() { /* ... (sem alterações) ... */ }
+    function checkCollisions() {
+        const allSnakes = [player, ...bots].filter(s => s);
+        for (let i = allSnakes.length - 1; i >= 0; i--) {
+            const currentSnake = allSnakes[i];
+            if (!currentSnake) continue;
+            const head = currentSnake.body[0];
+            if (head.x < currentSnake.radius || head.x > WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > WORLD_HEIGHT - currentSnake.radius) {
+                killSnake(currentSnake);
+                continue;
+            }
+            for (let j = pellets.length - 1; j >= 0; j--) {
+                const p = pellets[j];
+                if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
+                    currentSnake.score += p.value;
+                    pellets.splice(j, 1);
+                    spawnPellet();
+                }
+            }
+            for (let j = 0; j < allSnakes.length; j++) {
+                const otherSnake = allSnakes[j];
+                if (!otherSnake) continue;
+                for (let k = 0; k < otherSnake.body.length; k++) {
+                    if (currentSnake === otherSnake && k < 4) continue;
+                    const segment = otherSnake.body[k];
+                    if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
+                        killSnake(currentSnake);
+                        j = allSnakes.length; // Otimização para sair do loop
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     function killSnake(snake) {
         for (let i = 0; i < 30; i++) {
             particles.push(createParticle(snake.body[0].x, snake.body[0].y, snake.color));
@@ -373,6 +489,7 @@
             if (botIndex > -1) bots.splice(botIndex, 1);
         }
     }
+
     function endGame(score) {
         isGameOver = true;
         clearInterval(gameInterval);
@@ -381,33 +498,127 @@
     }
     
     // --- Funções de UI e Auxiliares ---
-    function updateLeaderboard() { /* ... (sem alterações) ... */ }
-    function updateUI() { /* ... (sem alterações) ... */ }
-    function checkOrientation() { /* ... (sem alterações) ... */ }
-    function updateJoystick(touch) { /* ... (sem alterações) ... */ }
-    function spawnPellet(x, y, value = 1, color) { /* ... (sem alterações) ... */ }
-    function findClosestPellet(snake) { /* ... (sem alterações) ... */ }
+    function updateLeaderboard() {
+        const allSnakes = [player, ...bots].filter(s => s);
+        allSnakes.sort((a, b) => b.score - a.score);
+        leaderboardList.innerHTML = '';
+        const top5 = allSnakes.slice(0, 5);
+        top5.forEach(snake => {
+            const li = document.createElement('li');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = snake.name;
+            if (snake === player) nameSpan.style.color = player.color;
+            const scoreSpan = document.createElement('span');
+            scoreSpan.textContent = snake.score;
+            li.appendChild(nameSpan);
+            li.appendChild(scoreSpan);
+            leaderboardList.appendChild(li);
+        });
+    }
+
+    function updateUI() {
+        scoreElement.textContent = player ? player.score : 0;
+        snakesAliveElement.textContent = bots.length + (player ? 1 : 0);
+    }
+
+    function checkOrientation() {
+        if (isMobile) {
+            if (window.innerWidth < window.innerHeight) {
+                orientationMessage.style.display = 'flex';
+                if (gameInterval) {
+                    clearInterval(gameInterval);
+                    gameInterval = null;
+                }
+            } else {
+                orientationMessage.style.display = 'none';
+                if (!gameInterval && !isGameOver) {
+                    gameInterval = setInterval(gameLoop, 1000 / 60);
+                }
+            }
+        }
+    }
+    
+    // CORREÇÃO: Adicionada a função resizeCanvas que faltava
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        // Usa setTransform para evitar escalar o contexto múltiplas vezes
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function updateJoystick(touch) {
+        const dx = touch.clientX - joystickCenter.x;
+        const dy = touch.clientY - joystickCenter.y;
+        const maxDistance = joystickArea.clientWidth / 2 - joystick.clientWidth / 2;
+        const distance = Math.min(maxDistance, Math.hypot(dx, dy));
+        const angle = Math.atan2(dy, dx);
+        const joystickX = distance * Math.cos(angle);
+        const joystickY = distance * Math.sin(angle);
+        joystick.style.transform = `translate(calc(-50% + ${joystickX}px), calc(-50% + ${joystickY}px))`;
+        if (player && distance > maxDistance * 0.2) {
+            player.angle = angle;
+        }
+    }
+
+    function spawnPellet(x, y, value = 1, color) {
+        pellets.push({
+            x: x || Math.random() * WORLD_WIDTH,
+            y: y || Math.random() * WORLD_HEIGHT,
+            radius: value > 1 ? 4 : 2,
+            value: value,
+            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
+            vx: 0,
+            vy: 0
+        });
+    }
+
+    function findClosestPellet(snake) {
+        let closest = null;
+        let closestDist = Infinity;
+        pellets.forEach(p => {
+            const dist = Math.hypot(snake.body[0].x - p.x, snake.body[0].y - p.y);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = p;
+            }
+        });
+        return closest;
+    }
     
     // --- Event Listeners ---
     window.addEventListener('resize', () => { resizeCanvas(); if (isMobile) checkOrientation(); });
     restartButton.addEventListener('click', startGame);
-    // ... (restantes event listeners)
 
-    // --- Código Compactado (sem alterações, para manter a funcionalidade) ---
-    drawCircle=function(t,o,e,a){ctx.fillStyle=a,ctx.beginPath(),ctx.arc(t,o,e,0,2*Math.PI),ctx.fill()}
-    drawWorldBackground=function(){ctx.strokeStyle="#33ff33",ctx.lineWidth=10,ctx.strokeRect(0,0,WORLD_WIDTH,WORLD_HEIGHT),ctx.strokeStyle="rgba(255, 255, 255, 0.03)",ctx.lineWidth=2;for(let t=0;t<=WORLD_WIDTH;t+=50)ctx.beginPath(),ctx.moveTo(t,0),ctx.lineTo(t,WORLD_HEIGHT),ctx.stroke();for(let t=0;t<=WORLD_HEIGHT;t+=50)ctx.beginPath(),ctx.moveTo(0,t),ctx.lineTo(WORLD_WIDTH,t),ctx.stroke()}
-    handleInput=function(){player&&(isMobile||(keys.ArrowLeft&&(player.angle-=player.turnSpeed),keys.ArrowRight&&(player.angle+=player.turnSpeed)),player.isBoosting=keys.Space)}
-    updateBots=function(){bots.forEach(t=>{if(!t.targetPellet||Math.random()<.005)t.targetPellet=findClosestPellet(t);if(t.targetPellet){const o=Math.atan2(t.targetPellet.y-t.body[0].y,t.targetPellet.x-t.body[0].x);t.angle+=Math.sign(o-t.angle)*t.turnSpeed*.5}moveSnake(t)})}
-    moveSnake=function(t){const o=t.isBoosting?2*t.speed:t.speed,e=t.body[0],a={x:e.x+Math.cos(t.angle)*o,y:e.y+Math.sin(t.angle)*o};t.body.unshift(a);const s=15+t.score;for(;t.body.length>s&&t.body.length>2;)t.body.pop()}
-    updatePellets=function(){const t=[player,...bots].filter(t=>t);pellets.forEach(o=>{o.vx*=.95,o.vy*=.95,t.forEach(t=>{if(t){const e=t.body[0],a=Math.hypot(o.x-e.x,o.y-e.y);if(a<t.attractionRadius){const s=e.x-o.x,n=e.y-o.y;o.vx+=s/a*t.attractionSpeed,o.vy+=n/a*t.attractionSpeed}}}),o.x+=o.vx,o.y+=o.vy})}
-    checkCollisions=function(){const t=[player,...bots].filter(t=>t);for(let o=t.length-1;o>=0;o--){const e=t[o];if(e){const a=e.body[0];if(a.x<e.radius||a.x>WORLD_WIDTH-e.radius||a.y<e.radius||a.y>WORLD_HEIGHT-e.radius){killSnake(e);continue}for(let o=pellets.length-1;o>=0;o--){const t=pellets[o];Math.hypot(a.x-t.x,a.y-t.y)<e.radius+t.radius&&(e.score+=t.value,pellets.splice(o,1),spawnPellet())}for(let o=0;o<t.length;o++){const s=t[o];if(s)for(let n=0;n<s.body.length;n++){if(e===s&&n<4)continue;const i=s.body[n];if(Math.hypot(a.x-i.x,a.y-i.y)<e.radius){killSnake(e);break}}}}}}
-    updateLeaderboard=function(){const t=[player,...bots].filter(t=>t);t.sort((t,o)=>o.score-t.score),leaderboardList.innerHTML="";const o=t.slice(0,5);o.forEach(t=>{const o=document.createElement("li"),e=document.createElement("span");e.textContent=t.name,t===player&&(e.style.color=player.color);const a=document.createElement("span");a.textContent=t.score,o.appendChild(e),o.appendChild(a),leaderboardList.appendChild(o)})}
-    updateUI=function(){scoreElement.textContent=player?player.score:0,snakesAliveElement.textContent=bots.length+(player?1:0)}
-    checkOrientation=function(){isMobile&&(window.innerWidth<window.innerHeight?(orientationMessage.style.display="block",gameInterval&&clearInterval(gameInterval)):(orientationMessage.style.display="none",!gameInterval&&!isGameOver&&(gameInterval=setInterval(gameLoop,1e3/60))))}
-    updateJoystick=function(t){const o=t.clientX-joystickCenter.x,e=t.clientY-joystickCenter.y,a=joystickArea.clientWidth/2-joystick.clientWidth/2,s=Math.min(a,Math.hypot(o,e)),n=Math.atan2(e,o),i=s*Math.cos(n),l=s*Math.sin(n);joystick.style.transform=`translate(calc(-50% + ${i}px), calc(-50% + ${l}px))`,player&&s> .2*a&&(player.angle=n)}
-    spawnPellet=function(t,o,e=1,a){pellets.push({x:t||Math.random()*WORLD_WIDTH,y:o||Math.random()*WORLD_HEIGHT,radius:e>1?4:2,value:e,color:a||`hsl(${360*Math.random()}, 100%, 50%)`,vx:0,vy:0})}
-    findClosestPellet=function(t){let o=null,e=1/0;return pellets.forEach(a=>{const s=Math.hypot(t.body[0].x-a.x,t.body[0].y-a.y);s<e&&(e=s,o=a)}),o}
-    if(!isMobile){document.addEventListener("keydown",t=>{"ArrowLeft"in keys||"ArrowRight"in keys||"Space"in keys?(t.preventDefault(),keys[t.code]=!0):"ArrowUp"in keys&&"ArrowDown"in keys&&(t.preventDefault(),keys[t.code]=!0)}),document.addEventListener("keyup",t=>{"ArrowLeft"in keys||"ArrowRight"in keys||"Space"in keys?(t.preventDefault(),keys[t.code]=!1):"ArrowUp"in keys&&"ArrowDown"in keys&&(t.preventDefault(),keys[t.code]=!1)})}else{joystickArea.addEventListener("touchstart",t=>{t.preventDefault();const o=t.touches[0],e=joystickArea.getBoundingClientRect();joystickCenter={x:e.left+e.width/2,y:e.top+e.height/2},joystickActive=!0,joystickArea.classList.add("active"),updateJoystick(o)}),joystickArea.addEventListener("touchmove",t=>{t.preventDefault(),joystickActive&&updateJoystick(t.touches[0])}),joystickArea.addEventListener("touchend",t=>{t.preventDefault(),joystickActive=!1,joystickArea.classList.remove("active"),joystick.style.transform="translate(-50%, -50%)"}),boostBtn.addEventListener("touchstart",t=>{t.preventDefault(),keys.Space=!0}),boostBtn.addEventListener("touchend",t=>{t.preventDefault(),keys.Space=!1})}
+    if (!isMobile) {
+        document.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.code)) { e.preventDefault(); keys[e.code] = true; } });
+        document.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.code)) { e.preventDefault(); keys[e.code] = false; } });
+    } else {
+        joystickArea.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = joystickArea.getBoundingClientRect();
+            joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            joystickActive = true;
+            updateJoystick(touch);
+        });
+        joystickArea.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (joystickActive) updateJoystick(e.touches[0]);
+        });
+        joystickArea.addEventListener('touchend', e => {
+            e.preventDefault();
+            joystickActive = false;
+            joystick.style.transform = 'translate(-50%, -50%)';
+        });
+        boostBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.Space = true; });
+        boostBtn.addEventListener('touchend', e => { e.preventDefault(); keys.Space = false; });
+    }
 
     // --- Inicialização ---
     startGame();
