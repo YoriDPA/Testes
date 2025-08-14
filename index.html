@@ -6,7 +6,7 @@
     <meta name="orientation" content="landscape">
     <title>Clone do Snake.io</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #33ff33;
@@ -15,7 +15,7 @@
             --border-color: #4a4a4a;
         }
         body {
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Orbitron', sans-serif;
             background-color: var(--background-color);
             color: #ffffff;
             margin: 0;
@@ -36,13 +36,16 @@
             transition: opacity 0.3s ease;
         }
         .ui-panel {
-            top: 0.5rem;
-            left: 0.5rem;
-            font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+            bottom: 0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(0.7rem, 1.3vw, 0.9rem);
             z-index: 100;
             background: rgba(0, 0, 0, 0.6);
-            padding: 0.3rem 0.6rem;
+            padding: 0.4rem 1rem;
             border-radius: 5px;
+            display: flex;
+            gap: 2rem;
         }
         #leaderboard {
             top: 0.5rem;
@@ -50,7 +53,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             border-radius: 5px;
             padding: 0.5rem;
-            font-size: clamp(0.5rem, 1vw, 0.7rem);
+            font-size: clamp(0.6rem, 1.1vw, 0.8rem);
             width: clamp(120px, 15vw, 180px);
             color: #ccc;
             z-index: 100;
@@ -59,7 +62,7 @@
             margin: 0 0 0.5rem 0;
             color: var(--primary-color);
             text-align: center;
-            font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+            font-size: clamp(0.7rem, 1.5vw, 0.9rem);
         }
         #leaderboard ol { margin: 0; padding: 0; list-style-type: none; }
         #leaderboard li { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
@@ -82,7 +85,36 @@
             flex-direction: column;
             align-items: center;
             gap: 1rem;
-            font-size: clamp(0.8rem, 2vw, 1rem);
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+        }
+        #startMenu input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 5px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            width: 100%;
+        }
+        #startMenu button, #gameOverMessage button {
+            background-color: var(--primary-color);
+            color: black;
+            padding: 0.5rem 1.5rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #startMenu button:hover, #gameOverMessage button:hover {
+            background-color: white;
+        }
+
+        #finalRank {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: -0.5rem;
         }
         .message-box.hidden { display: none; }
         #orientation-message {
@@ -136,12 +168,12 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     
-    <div class="ui-panel ui-element">
+    <div class="ui-panel ui-element hidden">
         <div>PONTOS: <span id="score">0</span></div>
         <div>VIVOS: <span id="snakes-alive">1</span></div>
     </div>
 
-    <div id="leaderboard" class="ui-element">
+    <div id="leaderboard" class="ui-element hidden">
         <h3>Classificação</h3>
         <ol id="leaderboard-list"></ol>
     </div>
@@ -154,477 +186,548 @@
     </div>
 
     <div id="orientation-message" class="message-box">Por favor, rode o seu dispositivo para o modo paisagem.</div>
+    
+    <div id="startMenu" class="message-box">
+        <h2>Bem-vindo!</h2>
+        <input type="text" id="playerNameInput" placeholder="Digite o seu nome" maxlength="10">
+        <button id="startButton">Jogar</button>
+    </div>
+
     <div id="gameOverMessage" class="message-box hidden">
         <h2>Fim de Jogo!</h2>
+        <p id="finalRank"></p>
         <p id="finalScore"></p>
         <button id="restartButton">Jogar Novamente</button>
     </div>
 
 <script>
-    // --- Configurações e Elementos do DOM ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const leaderboardList = document.getElementById('leaderboard-list');
-    const scoreElement = document.getElementById('score');
-    const snakesAliveElement = document.getElementById('snakes-alive');
-    const gameOverMessage = document.getElementById('gameOverMessage');
-    const finalScoreElement = document.getElementById('finalScore');
-    const restartButton = document.getElementById('restartButton');
-    const boostBtn = document.getElementById('boost-btn');
-    const joystickArea = document.getElementById('joystick-area');
-    const joystick = document.getElementById('joystick');
-    const joystickControls = document.getElementById('joystick-controls');
-    const boostControls = document.getElementById('boost-controls');
-    const orientationMessage = document.getElementById('orientation-message');
+    // --- CONFIGURAÇÕES GLOBAIS ---
+    const CONFIG = {
+        NUM_BOTS: 15,
+        NUM_PELLETS: 250,
+        WORLD_WIDTH: 2500,
+        WORLD_HEIGHT: 2500,
+        BOT_NAMES: ["Ghost", "Viper", "Raptor", "Siren", "Jaws", "Spike", "Shadow", "Blaze", "Fury", "Titan", "Reaper", "Worm", "Doom", "Cobra", "Venom"],
+        IS_MOBILE: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    };
 
-    const NUM_BOTS = 15;
-    const NUM_PELLETS = 250;
-    const WORLD_WIDTH = 2500;
-    const WORLD_HEIGHT = 2500;
-
-    // --- Estado do Jogo ---
-    let player, bots, pellets, particles;
-    let gameInterval, isGameOver;
-    let camera = { x: 0, y: 0, zoom: 1 };
-    let keys = { ArrowLeft: false, ArrowRight: false, Space: false };
-    let joystickActive = false;
-    let joystickCenter = { x: 0, y: 0 };
-    let lastPlayerPosition = null;
-    
-    const BOT_NAMES = ["Ghost", "Viper", "Raptor", "Siren", "Jaws", "Spike", "Shadow", "Blaze", "Fury", "Titan", "Reaper", "Worm", "Doom", "Cobra", "Venom"];
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // --- Classes e Fábricas ---
-    function createSnake(x, y, color, name) {
-        return {
-            name: name, body: [{x, y}], angle: Math.random() * 2 * Math.PI,
-            speed: 1.8, turnSpeed: 0.05, radius: 8, color: color, score: 0,
-            isBoosting: false, attractionRadius: 40, attractionSpeed: 0.3
-        };
-    }
-
-    function createParticle(x, y, color) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 3 + 1;
-        return {
-            x, y, color,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 60,
-            alpha: 1
-        };
-    }
-
-    // --- Funções Principais do Jogo ---
-    function startGame() {
-        resizeCanvas();
-        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'hsl(120, 100%, 50%)', 'Você');
-        lastPlayerPosition = { ...player.body[0] };
-        bots = [];
-        const usedNames = [...BOT_NAMES];
-        for (let i = 0; i < NUM_BOTS; i++) {
-            const nameIndex = Math.floor(Math.random() * usedNames.length);
-            const botName = usedNames.splice(nameIndex, 1)[0];
-            bots.push(createSnake(
-                Math.random() * WORLD_WIDTH,
-                Math.random() * WORLD_HEIGHT,
-                `hsl(${Math.random() * 360}, 100%, 75%)`, botName
-            ));
-        }
-        pellets = [];
-        for (let i = 0; i < NUM_PELLETS; i++) spawnPellet();
-        particles = [];
-        isGameOver = false;
-        keys = { ArrowLeft: false, ArrowRight: false, Space: false };
-        joystickActive = false;
-        if (isMobile) {
-            joystickControls.style.display = 'block';
-            boostControls.style.display = 'block';
-            joystick.style.transform = 'translate(-50%, -50%)';
-        }
-        checkOrientation();
-        updateUI();
-        gameOverMessage.classList.add('hidden');
-        if (gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(gameLoop, 1000 / 60);
-    }
-    
-    function gameLoop() {
-        updateAll();
-        drawAll();
-    }
-
-    function updateAll() {
-        if (!isGameOver) {
-            handleInput();
-            updatePlayer();
-            updateBots();
-            updatePellets();
-            checkCollisions();
-        }
-        updateParticles();
-        updateCamera();
-    }
-
-    function drawAll() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.save();
-        ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
-        ctx.scale(camera.zoom, camera.zoom);
-        
-        const focusPoint = player ? player.body[0] : lastPlayerPosition;
-        if(focusPoint) {
-            ctx.translate(-focusPoint.x, -focusPoint.y);
-        }
-        
-        drawWorldBackground();
-        pellets.forEach(p => drawCircle(p.x, p.y, p.radius, p.color));
-        if (player) drawSnake(player);
-        bots.forEach(drawSnake);
-        particles.forEach(p => drawParticle(p));
-        
-        ctx.restore();
-
-        if(isGameOver) {
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
-            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-        }
-        
-        updateLeaderboard();
-        updateUI();
-    }
-
-    // --- Lógica de Desenho ---
-    function drawSnake(snake) {
-        if (snake.body.length === 0) return;
-
-        for (let i = snake.body.length - 1; i >= 0; i--) {
-            const segment = snake.body[i];
-            const segmentRadius = i === 0 ? snake.radius : snake.radius * 0.9; // Cabeça um pouco maior
-            drawCircle(segment.x, segment.y, segmentRadius, snake.color);
-            const shadowColor = `hsl(${getHue(snake.color)}, 100%, 30%)`;
-            drawCircle(segment.x, segment.y, segmentRadius * 0.8, shadowColor);
+    // --- CLASSE PARTICLE ---
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.life = 60;
+            this.alpha = 1;
         }
 
-        const head = snake.body[0];
-        const eyeRadius = snake.radius * 0.3;
-        const eyeOffset = snake.radius * 0.4;
-        
-        const eye1X = head.x + Math.cos(snake.angle + Math.PI / 2) * eyeOffset;
-        const eye1Y = head.y + Math.sin(snake.angle + Math.PI / 2) * eyeOffset;
-        drawCircle(eye1X, eye1Y, eyeRadius, 'white');
-        drawCircle(eye1X, eye1Y, eyeRadius * 0.5, 'black');
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life--;
+            this.alpha = this.life / 60;
+        }
 
-        const eye2X = head.x + Math.cos(snake.angle - Math.PI / 2) * eyeOffset;
-        const eye2Y = head.y + Math.sin(snake.angle - Math.PI / 2) * eyeOffset;
-        drawCircle(eye2X, eye2Y, eyeRadius, 'white');
-        drawCircle(eye2X, eye2Y, eyeRadius * 0.5, 'black');
-    }
-    
-    function drawCircle(x, y, radius, color) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fill();
-    }
-
-    function drawParticle(p) {
-        ctx.globalAlpha = p.alpha;
-        drawCircle(p.x, p.y, 2, p.color);
-        ctx.globalAlpha = 1;
-    }
-
-    function drawWorldBackground() {
-        ctx.strokeStyle = "#33ff33";
-        ctx.lineWidth = 10;
-        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-        ctx.lineWidth = 2;
-        const gridSize = 50;
-        for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
+        draw(ctx) {
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, WORLD_HEIGHT);
-            ctx.stroke();
-        }
-        for (let y = 0; y <= WORLD_HEIGHT; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(WORLD_WIDTH, y);
-            ctx.stroke();
+            ctx.arc(this.x, this.y, 2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
         }
     }
 
-    // --- Lógica de Atualização ---
-    function handleInput() {
-        if (!player) return;
-        if (!isMobile) {
-            if (keys.ArrowLeft) player.angle -= player.turnSpeed;
-            if (keys.ArrowRight) player.angle += player.turnSpeed;
+    // --- CLASSE SNAKE ---
+    class Snake {
+        constructor(x, y, color, name) {
+            this.name = name;
+            this.body = [{ x, y }];
+            this.angle = Math.random() * 2 * Math.PI;
+            this.speed = 1.8;
+            this.turnSpeed = 0.05;
+            this.radius = 8;
+            this.color = color;
+            this.score = 0;
+            this.isBoosting = false;
+            this.attractionRadius = 40;
+            this.attractionSpeed = 0.3;
+            this.targetPellet = null;
         }
-        player.isBoosting = keys.Space;
-    }
 
-    function updatePlayer() { 
-        if (player) moveSnake(player); 
-    }
+        move() {
+            const currentSpeed = this.isBoosting ? 2 * this.speed : this.speed;
+            const head = this.body[0];
+            const newHead = {
+                x: head.x + Math.cos(this.angle) * currentSpeed,
+                y: head.y + Math.sin(this.angle) * currentSpeed
+            };
+            this.body.unshift(newHead);
 
-    function updateBots() {
-        bots.forEach(bot => {
-            if (!bot.targetPellet || Math.random() < 0.005) {
-                bot.targetPellet = findClosestPellet(bot);
+            const snakeLength = 15 + this.score;
+            while (this.body.length > snakeLength && this.body.length > 2) {
+                this.body.pop();
             }
-            if (bot.targetPellet) {
-                const targetAngle = Math.atan2(bot.targetPellet.y - bot.body[0].y, bot.targetPellet.x - bot.body[0].x);
-                bot.angle += Math.sign(targetAngle - bot.angle) * bot.turnSpeed * 0.5;
-            }
-            moveSnake(bot);
-        });
-    }
+        }
 
-    function moveSnake(snake) {
-        const currentSpeed = snake.isBoosting ? 2 * snake.speed : snake.speed;
-        const head = snake.body[0];
-        const newHead = {
-            x: head.x + Math.cos(snake.angle) * currentSpeed,
-            y: head.y + Math.sin(snake.angle) * currentSpeed
-        };
-        
-        snake.body.unshift(newHead);
-        
-        const snakeLength = 15 + snake.score;
-        while (snake.body.length > snakeLength && snake.body.length > 2) {
-            snake.body.pop();
+        draw(ctx) {
+            if (this.body.length === 0) return;
+
+            for (let i = this.body.length - 1; i >= 0; i--) {
+                const segment = this.body[i];
+                const segmentRadius = i === 0 ? this.radius : this.radius * 0.9;
+                
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(segment.x, segment.y, segmentRadius, 0, 2 * Math.PI);
+                ctx.fill();
+
+                const shadowColor = `hsl(${getHue(this.color)}, 100%, 30%)`;
+                ctx.fillStyle = shadowColor;
+                ctx.beginPath();
+                ctx.arc(segment.x, segment.y, segmentRadius * 0.8, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            const head = this.body[0];
+            const eyeRadius = this.radius * 0.3;
+            const eyeOffset = this.radius * 0.4;
+            
+            const eye1X = head.x + Math.cos(this.angle + Math.PI / 2) * eyeOffset;
+            const eye1Y = head.y + Math.sin(this.angle + Math.PI / 2) * eyeOffset;
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(eye1X, eye1Y, eyeRadius, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(eye1X, eye1Y, eyeRadius * 0.5, 0, 2 * Math.PI); ctx.fill();
+
+            const eye2X = head.x + Math.cos(this.angle - Math.PI / 2) * eyeOffset;
+            const eye2Y = head.y + Math.sin(this.angle - Math.PI / 2) * eyeOffset;
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(eye2X, eye2Y, eyeRadius, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(eye2X, eye2Y, eyeRadius * 0.5, 0, 2 * Math.PI); ctx.fill();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.font = '12px "Orbitron"';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 3;
+            ctx.strokeText(this.name, head.x, head.y - this.radius * 2.5);
+            ctx.fillText(this.name, head.x, head.y - this.radius * 2.5);
         }
     }
 
-    function updatePellets() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        pellets.forEach(p => {
-            p.vx *= 0.95;
-            p.vy *= 0.95;
-            allSnakes.forEach(snake => {
-                if (!snake) return;
-                const head = snake.body[0];
-                const distance = Math.hypot(p.x - head.x, p.y - head.y);
-                if (distance < snake.attractionRadius) {
-                    const dx = head.x - p.x;
-                    const dy = head.y - p.y;
-                    p.vx += (dx / distance) * snake.attractionSpeed;
-                    p.vy += (dy / distance) * snake.attractionSpeed;
-                }
+    // --- CLASSE PRINCIPAL DO JOGO ---
+    class Game {
+        constructor() {
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.initDOMElements();
+            this.player = null;
+            this.bots = [];
+            this.pellets = [];
+            this.particles = [];
+            this.gameInterval = null;
+            this.isGameOver = false;
+            this.camera = { x: 0, y: 0, zoom: 1 };
+            this.keys = { ArrowLeft: false, ArrowRight: false, Space: false };
+            this.joystickActive = false;
+            this.joystickCenter = { x: 0, y: 0 };
+            this.lastPlayerPosition = null;
+            this.initEventListeners();
+        }
+
+        initDOMElements() {
+            this.leaderboard = document.getElementById('leaderboard');
+            this.uiPanel = document.querySelector('.ui-panel');
+            this.leaderboardList = document.getElementById('leaderboard-list');
+            this.scoreElement = document.getElementById('score');
+            this.snakesAliveElement = document.getElementById('snakes-alive');
+            this.gameOverMessage = document.getElementById('gameOverMessage');
+            this.finalScoreElement = document.getElementById('finalScore');
+            this.finalRankElement = document.getElementById('finalRank');
+            this.restartButton = document.getElementById('restartButton');
+            this.boostBtn = document.getElementById('boost-btn');
+            this.joystickArea = document.getElementById('joystick-area');
+            this.joystick = document.getElementById('joystick');
+            this.joystickControls = document.getElementById('joystick-controls');
+            this.boostControls = document.getElementById('boost-controls');
+            this.orientationMessage = document.getElementById('orientation-message');
+            this.startMenu = document.getElementById('startMenu');
+            this.playerNameInput = document.getElementById('playerNameInput');
+            this.startButton = document.getElementById('startButton');
+        }
+
+        startGame(playerName) {
+            this.resizeCanvas();
+            this.player = new Snake(CONFIG.WORLD_WIDTH / 2, CONFIG.WORLD_HEIGHT / 2, 'hsl(120, 100%, 50%)', playerName);
+            this.lastPlayerPosition = { ...this.player.body[0] };
+            
+            this.bots = [];
+            const usedNames = [...CONFIG.BOT_NAMES];
+            for (let i = 0; i < CONFIG.NUM_BOTS; i++) {
+                const nameIndex = Math.floor(Math.random() * usedNames.length);
+                const botName = usedNames.splice(nameIndex, 1)[0];
+                this.bots.push(new Snake(
+                    Math.random() * CONFIG.WORLD_WIDTH,
+                    Math.random() * CONFIG.WORLD_HEIGHT,
+                    `hsl(${Math.random() * 360}, 100%, 75%)`, botName
+                ));
+            }
+
+            this.pellets = [];
+            for (let i = 0; i < CONFIG.NUM_PELLETS; i++) this.spawnPellet();
+            this.particles = [];
+            this.isGameOver = false;
+            this.keys = { ArrowLeft: false, ArrowRight: false, Space: false };
+            this.joystickActive = false;
+
+            if (CONFIG.IS_MOBILE) {
+                this.joystickControls.style.display = 'block';
+                this.boostControls.style.display = 'block';
+                this.joystick.style.transform = 'translate(-50%, -50%)';
+            }
+
+            this.checkOrientation();
+            this.updateUI();
+            this.gameOverMessage.classList.add('hidden');
+            this.startMenu.classList.add('hidden');
+            this.uiPanel.classList.remove('hidden');
+            this.leaderboard.classList.remove('hidden');
+
+            if (this.gameInterval) clearInterval(this.gameInterval);
+            this.gameInterval = setInterval(() => this.gameLoop(), 1000 / 60);
+        }
+
+        gameLoop() {
+            this.updateAll();
+            this.drawAll();
+        }
+
+        updateAll() {
+            if (!this.isGameOver) {
+                this.handleInput();
+                if (this.player) this.player.move();
+                this.bots.forEach(bot => {
+                    if (!bot.targetPellet || Math.random() < 0.005) bot.targetPellet = this.findClosestPellet(bot);
+                    if (bot.targetPellet) {
+                        const targetAngle = Math.atan2(bot.targetPellet.y - bot.body[0].y, bot.targetPellet.x - bot.body[0].x);
+                        bot.angle += Math.sign(targetAngle - bot.angle) * bot.turnSpeed * 0.5;
+                    }
+                    bot.move();
+                });
+                this.updatePellets();
+                this.checkCollisions();
+            }
+            this.updateParticles();
+            this.updateCamera();
+        }
+
+        drawAll() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.save();
+            this.ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
+            this.ctx.scale(this.camera.zoom, this.camera.zoom);
+            
+            const focusPoint = this.player ? this.player.body[0] : this.lastPlayerPosition;
+            if (focusPoint) this.ctx.translate(-focusPoint.x, -focusPoint.y);
+            
+            this.drawWorldBackground();
+            this.pellets.forEach(p => this.drawCircle(p.x, p.y, p.radius, p.color));
+            if (this.player) this.player.draw(this.ctx);
+            this.bots.forEach(bot => bot.draw(this.ctx));
+            this.particles.forEach(p => p.draw(this.ctx));
+            
+            this.ctx.restore();
+
+            if (this.isGameOver) {
+                this.ctx.fillStyle = "rgba(0,0,0,0.5)";
+                this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+            }
+            
+            this.updateLeaderboard();
+            this.updateUI();
+        }
+        
+        endGame(score) {
+            this.isGameOver = true;
+            
+            const allSnakes = [{score: score, name: this.player.name}, ...this.bots];
+            allSnakes.sort((a, b) => b.score - a.score);
+            const rank = allSnakes.findIndex(s => s.name === this.player.name) + 1;
+            
+            this.finalRankElement.textContent = `Você ficou em ${rank}º lugar!`;
+            this.finalScoreElement.textContent = `Pontuação Final: ${score}`;
+            this.gameOverMessage.classList.remove('hidden');
+        }
+
+        initEventListeners() {
+            window.addEventListener('resize', () => { this.resizeCanvas(); this.checkOrientation(); });
+            
+            this.startButton.addEventListener('click', () => {
+                const playerName = this.playerNameInput.value.trim() || 'Jogador';
+                this.startGame(playerName);
             });
-            p.x += p.vx;
-            p.y += p.vy;
-        });
-    }
 
-    function updateParticles() {
-        for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            p.alpha = p.life / 60;
-            if (p.life <= 0) particles.splice(i, 1);
-        }
-    }
+            this.restartButton.addEventListener('click', () => {
+                this.gameOverMessage.classList.add('hidden');
+                this.startMenu.classList.remove('hidden');
+            });
 
-    function updateCamera() {
-        if (player) {
-            lastPlayerPosition = { ...player.body[0] };
-        }
-        const targetZoom = player ? 1 - (player.body.length / 800) : camera.zoom;
-        camera.zoom = (camera.zoom || 1) * 0.98 + targetZoom * 0.02;
-    }
-
-    // --- Colisões e Estado do Jogo ---
-    function checkCollisions() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        for (let i = allSnakes.length - 1; i >= 0; i--) {
-            const currentSnake = allSnakes[i];
-            if (!currentSnake) continue;
-            const head = currentSnake.body[0];
-            if (head.x < currentSnake.radius || head.x > WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > WORLD_HEIGHT - currentSnake.radius) {
-                killSnake(currentSnake);
-                continue;
+            if (!CONFIG.IS_MOBILE) {
+                document.addEventListener('keydown', e => { if (this.keys.hasOwnProperty(e.code)) { e.preventDefault(); this.keys[e.code] = true; } });
+                document.addEventListener('keyup', e => { if (this.keys.hasOwnProperty(e.code)) { e.preventDefault(); this.keys[e.code] = false; } });
+            } else {
+                this.joystickArea.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.joystickArea.getBoundingClientRect();
+                    this.joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+                    this.joystickActive = true;
+                    this.updateJoystick(touch);
+                });
+                this.joystickArea.addEventListener('touchmove', e => {
+                    e.preventDefault();
+                    if (this.joystickActive) this.updateJoystick(e.touches[0]);
+                });
+                this.joystickArea.addEventListener('touchend', e => {
+                    e.preventDefault();
+                    this.joystickActive = false;
+                    this.joystick.style.transform = 'translate(-50%, -50%)';
+                });
+                this.boostBtn.addEventListener('touchstart', e => { e.preventDefault(); this.keys.Space = true; });
+                this.boostBtn.addEventListener('touchend', e => { e.preventDefault(); this.keys.Space = false; });
             }
-            for (let j = pellets.length - 1; j >= 0; j--) {
-                const p = pellets[j];
-                if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
-                    currentSnake.score += p.value;
-                    pellets.splice(j, 1);
-                    spawnPellet();
-                }
+        }
+
+        // --- MÉTODOS RESTANTES (sem alterações) ---
+        handleInput() {
+            if (!this.player) return;
+            if (!CONFIG.IS_MOBILE) {
+                if (this.keys.ArrowLeft) this.player.angle -= this.player.turnSpeed;
+                if (this.keys.ArrowRight) this.player.angle += this.player.turnSpeed;
             }
-            for (let j = 0; j < allSnakes.length; j++) {
-                const otherSnake = allSnakes[j];
-                if (!otherSnake || currentSnake === otherSnake) {
+            this.player.isBoosting = this.keys.Space;
+        }
+
+        updatePellets() {
+            const allSnakes = [this.player, ...this.bots].filter(s => s);
+            this.pellets.forEach(p => {
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                allSnakes.forEach(snake => {
+                    if (!snake) return;
+                    const head = snake.body[0];
+                    const distance = Math.hypot(p.x - head.x, p.y - head.y);
+                    if (distance < snake.attractionRadius) {
+                        const dx = head.x - p.x;
+                        const dy = head.y - p.y;
+                        p.vx += (dx / distance) * snake.attractionSpeed;
+                        p.vy += (dy / distance) * snake.attractionSpeed;
+                    }
+                });
+                p.x += p.vx;
+                p.y += p.vy;
+            });
+        }
+
+        updateParticles() {
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.update();
+                if (p.life <= 0) this.particles.splice(i, 1);
+            }
+        }
+
+        updateCamera() {
+            if (this.player) {
+                this.lastPlayerPosition = { ...this.player.body[0] };
+            }
+            const targetZoom = this.player ? 1 - (this.player.body.length / 800) : this.camera.zoom;
+            this.camera.zoom = this.camera.zoom * 0.98 + targetZoom * 0.02;
+        }
+
+        checkCollisions() {
+            const allSnakes = [this.player, ...this.bots].filter(s => s);
+            for (let i = allSnakes.length - 1; i >= 0; i--) {
+                const currentSnake = allSnakes[i];
+                if (!currentSnake) continue;
+                const head = currentSnake.body[0];
+
+                if (head.x < currentSnake.radius || head.x > CONFIG.WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > CONFIG.WORLD_HEIGHT - currentSnake.radius) {
+                    this.killSnake(currentSnake);
                     continue;
                 }
-                for (let k = 0; k < otherSnake.body.length; k++) {
-                    const segment = otherSnake.body[k];
-                    if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
-                        killSnake(currentSnake);
-                        j = allSnakes.length;
-                        break;
+
+                for (let j = this.pellets.length - 1; j >= 0; j--) {
+                    const p = this.pellets[j];
+                    if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
+                        currentSnake.score += p.value;
+                        this.pellets.splice(j, 1);
+                        this.spawnPellet();
+                    }
+                }
+
+                for (let j = 0; j < allSnakes.length; j++) {
+                    const otherSnake = allSnakes[j];
+                    if (!otherSnake || currentSnake === otherSnake) continue;
+                    for (let k = 0; k < otherSnake.body.length; k++) {
+                        const segment = otherSnake.body[k];
+                        if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
+                            this.killSnake(currentSnake);
+                            j = allSnakes.length;
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
 
-    function killSnake(snake) {
-        for (let i = 0; i < 30; i++) {
-            particles.push(createParticle(snake.body[0].x, snake.body[0].y, snake.color));
-        }
-        snake.body.forEach((seg, i) => {
-            if (i % 5 === 0) spawnPellet(seg.x, seg.y, 5, "#ffffff");
-        });
-        if (snake === player) {
-            endGame(player ? player.score : 0);
-            player = null;
-        } else {
-            const botIndex = bots.indexOf(snake);
-            if (botIndex > -1) bots.splice(botIndex, 1);
-        }
-    }
-
-    function endGame(score) {
-        isGameOver = true;
-        finalScoreElement.textContent = `Pontuação Final: ${score}`;
-        gameOverMessage.classList.remove('hidden');
-    }
-    
-    // --- Funções de UI e Auxiliares ---
-    function updateLeaderboard() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        allSnakes.sort((a, b) => b.score - a.score);
-        leaderboardList.innerHTML = '';
-        const top5 = allSnakes.slice(0, 5);
-        top5.forEach(snake => {
-            const li = document.createElement('li');
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = snake.name;
-            if (snake === player) nameSpan.style.color = player.color;
-            const scoreSpan = document.createElement('span');
-            scoreSpan.textContent = snake.score;
-            li.appendChild(nameSpan);
-            li.appendChild(scoreSpan);
-            leaderboardList.appendChild(li);
-        });
-    }
-
-    function updateUI() {
-        scoreElement.textContent = player ? player.score : 0;
-        snakesAliveElement.textContent = bots.length + (player ? 1 : 0);
-    }
-
-    function checkOrientation() {
-        if (isMobile) {
-            if (window.innerWidth < window.innerHeight) {
-                orientationMessage.style.display = 'flex';
-                if (gameInterval) {
-                    clearInterval(gameInterval);
-                    gameInterval = null;
-                }
+        killSnake(snake) {
+            for (let i = 0; i < 30; i++) {
+                this.particles.push(new Particle(snake.body[0].x, snake.body[0].y, snake.color));
+            }
+            snake.body.forEach((seg, i) => {
+                if (i % 5 === 0) this.spawnPellet(seg.x, seg.y, 5, "#ffffff");
+            });
+            if (snake === this.player) {
+                this.endGame(this.player ? this.player.score : 0);
+                this.player = null;
             } else {
-                orientationMessage.style.display = 'none';
-                if (!gameInterval && !isGameOver) {
-                    gameInterval = setInterval(gameLoop, 1000 / 60);
+                const botIndex = this.bots.indexOf(snake);
+                if (botIndex > -1) this.bots.splice(botIndex, 1);
+            }
+        }
+
+        updateLeaderboard() {
+            const allSnakes = [this.player, ...this.bots].filter(s => s);
+            allSnakes.sort((a, b) => b.score - a.score);
+            this.leaderboardList.innerHTML = '';
+            const top5 = allSnakes.slice(0, 5);
+            top5.forEach(snake => {
+                const li = document.createElement('li');
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = snake.name;
+                if (snake === this.player) nameSpan.style.color = this.player.color;
+                const scoreSpan = document.createElement('span');
+                scoreSpan.textContent = snake.score;
+                li.appendChild(nameSpan);
+                li.appendChild(scoreSpan);
+                this.leaderboardList.appendChild(li);
+            });
+        }
+
+        updateUI() {
+            this.scoreElement.textContent = this.player ? this.player.score : 0;
+            this.snakesAliveElement.textContent = this.bots.length + (this.player ? 1 : 0);
+        }
+
+        checkOrientation() {
+            if (CONFIG.IS_MOBILE) {
+                if (window.innerWidth < window.innerHeight) {
+                    this.orientationMessage.style.display = 'flex';
+                    if (this.gameInterval) {
+                        clearInterval(this.gameInterval);
+                        this.gameInterval = null;
+                    }
+                } else {
+                    this.orientationMessage.style.display = 'none';
+                    if (!this.gameInterval && !this.isGameOver) {
+                        this.gameInterval = setInterval(() => this.gameLoop(), 1000 / 60);
+                    }
                 }
             }
         }
-    }
-    
-    function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        
+        resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            this.canvas.width = width * dpr;
+            this.canvas.height = height * dpr;
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
 
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+        updateJoystick(touch) {
+            const dx = touch.clientX - this.joystickCenter.x;
+            const dy = touch.clientY - this.joystickCenter.y;
+            const maxDistance = this.joystickArea.clientWidth / 2 - this.joystick.clientWidth / 2;
+            const distance = Math.min(maxDistance, Math.hypot(dx, dy));
+            const angle = Math.atan2(dy, dx);
+            const joystickX = distance * Math.cos(angle);
+            const joystickY = distance * Math.sin(angle);
+            this.joystick.style.transform = `translate(calc(-50% + ${joystickX}px), calc(-50% + ${joystickY}px))`;
+            if (this.player && distance > maxDistance * 0.2) {
+                this.player.angle = angle;
+            }
+        }
 
-    function updateJoystick(touch) {
-        const dx = touch.clientX - joystickCenter.x;
-        const dy = touch.clientY - joystickCenter.y;
-        const maxDistance = joystickArea.clientWidth / 2 - joystick.clientWidth / 2;
-        const distance = Math.min(maxDistance, Math.hypot(dx, dy));
-        const angle = Math.atan2(dy, dx);
-        const joystickX = distance * Math.cos(angle);
-        const joystickY = distance * Math.sin(angle);
-        joystick.style.transform = `translate(calc(-50% + ${joystickX}px), calc(-50% + ${joystickY}px))`;
-        if (player && distance > maxDistance * 0.2) {
-            player.angle = angle;
+        spawnPellet(x, y, value = 1, color) {
+            this.pellets.push({
+                x: x || Math.random() * CONFIG.WORLD_WIDTH,
+                y: y || Math.random() * CONFIG.WORLD_HEIGHT,
+                radius: value > 1 ? 4 : 2,
+                value: value,
+                color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
+                vx: 0,
+                vy: 0
+            });
+        }
+
+        findClosestPellet(snake) {
+            let closest = null;
+            let closestDist = Infinity;
+            this.pellets.forEach(p => {
+                const dist = Math.hypot(snake.body[0].x - p.x, snake.body[0].y - p.y);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closest = p;
+                }
+            });
+            return closest;
+        }
+
+        drawCircle(x, y, radius, color) {
+            this.ctx.fillStyle = color;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
+
+        drawWorldBackground() {
+            this.ctx.strokeStyle = "#33ff33";
+            this.ctx.lineWidth = 10;
+            this.ctx.strokeRect(0, 0, CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+            this.ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+            this.ctx.lineWidth = 2;
+            const gridSize = 50;
+            for (let x = 0; x <= CONFIG.WORLD_WIDTH; x += gridSize) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, 0);
+                this.ctx.lineTo(x, CONFIG.WORLD_HEIGHT);
+                this.ctx.stroke();
+            }
+            for (let y = 0; y <= CONFIG.WORLD_HEIGHT; y += gridSize) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, y);
+                this.ctx.lineTo(CONFIG.WORLD_WIDTH, y);
+                this.ctx.stroke();
+            }
         }
     }
 
-    function spawnPellet(x, y, value = 1, color) {
-        pellets.push({
-            x: x || Math.random() * WORLD_WIDTH,
-            y: y || Math.random() * WORLD_HEIGHT,
-            radius: value > 1 ? 4 : 2,
-            value: value,
-            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
-            vx: 0,
-            vy: 0
-        });
-    }
-
-    function findClosestPellet(snake) {
-        let closest = null;
-        let closestDist = Infinity;
-        pellets.forEach(p => {
-            const dist = Math.hypot(snake.body[0].x - p.x, snake.body[0].y - p.y);
-            if (dist < closestDist) {
-                closestDist = dist;
-                closest = p;
-            }
-        });
-        return closest;
-    }
-
+    // --- FUNÇÕES AUXILIARES ---
     function getHue(hslColor) {
         if (!hslColor.startsWith('hsl')) return 0;
         return parseFloat(hslColor.substring(hslColor.indexOf('(') + 1, hslColor.indexOf(',')));
     }
-    
-    // --- Event Listeners ---
-    window.addEventListener('resize', () => { resizeCanvas(); if (isMobile) checkOrientation(); });
-    restartButton.addEventListener('click', startGame);
 
-    if (!isMobile) {
-        document.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.code)) { e.preventDefault(); keys[e.code] = true; } });
-        document.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.code)) { e.preventDefault(); keys[e.code] = false; } });
-    } else {
-        joystickArea.addEventListener('touchstart', e => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = joystickArea.getBoundingClientRect();
-            joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-            joystickActive = true;
-            updateJoystick(touch);
-        });
-        joystickArea.addEventListener('touchmove', e => {
-            e.preventDefault();
-            if (joystickActive) updateJoystick(e.touches[0]);
-        });
-        joystickArea.addEventListener('touchend', e => {
-            e.preventDefault();
-            joystickActive = false;
-            joystick.style.transform = 'translate(-50%, -50%)';
-        });
-        boostBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.Space = true; });
-        boostBtn.addEventListener('touchend', e => { e.preventDefault(); keys.Space = false; });
-    }
-
-    // --- Inicialização ---
-    startGame();
+    // --- INICIALIZAÇÃO ---
+    const game = new Game();
 </script>
 </body>
 </html>
