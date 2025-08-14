@@ -42,8 +42,8 @@
             padding: 0;
         }
         canvas#gameCanvas {
-            background-color: #000000;
-            border: 2px solid var(--primary-color);
+            background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
+            border: 1px solid var(--primary-color);
             width: 100%;
             height: 100%;
             max-width: 100vw;
@@ -52,13 +52,16 @@
         }
         .ui-panel {
             position: absolute;
-            top: 1rem;
-            left: 1rem;
+            top: 0.5rem;
+            left: 0.5rem;
             display: flex;
-            justify-content: space-between;
-            width: calc(100% - 2rem);
-            font-size: clamp(0.6rem, 2vw, 0.8rem);
+            flex-direction: column;
+            gap: 0.2rem;
+            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
             z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
         }
         .message-box {
             position: absolute;
@@ -67,37 +70,37 @@
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            border: 2px solid var(--primary-color);
+            padding: 1rem;
+            border-radius: 5px;
+            border: 1px solid var(--primary-color);
             text-align: center;
             z-index: 200;
-            width: 80%;
-            max-width: 400px;
+            width: 70%;
+            max-width: 300px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
-            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            gap: 0.8rem;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
         }
         #leaderboard {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: rgba(0, 0, 0, 0.5);
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 0.5rem;
-            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
-            width: clamp(120px, 20vw, 180px);
+            border-radius: 3px;
+            padding: 0.3rem;
+            font-size: clamp(0.4rem, 1.2vw, 0.6rem);
+            width: clamp(100px, 18vw, 150px);
             color: #ccc;
             z-index: 100;
         }
         #leaderboard h3 {
-            margin: 0 0 0.5rem 0;
+            margin: 0 0 0.3rem 0;
             color: var(--primary-color);
             text-align: center;
-            font-size: clamp(0.6rem, 1.8vw, 0.9rem);
+            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
         }
         #leaderboard ol {
             margin: 0;
@@ -107,51 +110,41 @@
         #leaderboard li {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.2rem;
         }
         #leaderboard li span:first-child {
             font-weight: bold;
             color: #fff;
         }
-        #mobile-controls {
+        .mobile-only {
+            display: none;
+        }
+        #joystick-controls {
             position: absolute;
             bottom: 1rem;
             left: 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
             z-index: 100;
         }
-        #mobile-controls button {
-            background-color: rgba(55, 65, 81, 0.7);
-            border: 2px solid var(--border-color);
-            color: white;
-            font-size: clamp(1.5rem, 5vw, 2rem);
-            width: clamp(50px, 15vw, 70px);
-            height: clamp(50px, 15vw, 70px);
-            border-radius: 50%;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        #boost-btn {
-            font-size: clamp(1rem, 4vw, 1.5rem);
-            width: clamp(60px, 18vw, 90px);
-            height: clamp(60px, 18vw, 90px);
+        #boost-controls {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 100;
         }
         #joystick-area {
-            width: clamp(80px, 20vw, 100px);
-            height: clamp(80px, 20vw, 100px);
+            width: clamp(70px, 18vw, 90px);
+            height: clamp(70px, 18vw, 90px);
             background: rgba(55, 65, 81, 0.7);
             border-radius: 50%;
             position: relative;
             touch-action: none;
         }
         #joystick-area.active {
-            box-shadow: 0 0 10px rgba(51, 255, 51, 0.8);
+            box-shadow: 0 0 8px rgba(51, 255, 51, 0.7);
         }
         #joystick {
-            width: clamp(32px, 8vw, 40px);
-            height: clamp(32px, 8vw, 40px);
+            width: clamp(28px, 7vw, 35px);
+            height: clamp(28px, 7vw, 35px);
             background: #33ff33;
             border-radius: 50%;
             position: absolute;
@@ -159,11 +152,22 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+        #boost-btn {
+            background-color: rgba(55, 65, 81, 0.7);
+            border: 1px solid var(--border-color);
+            color: white;
+            font-size: clamp(0.9rem, 3.5vw, 1.3rem);
+            width: clamp(50px, 15vw, 80px);
+            height: clamp(50px, 15vw, 80px);
+            border-radius: 50%;
+            user-select: none;
+            -webkit-user-select: none;
+        }
         .controls {
             position: absolute;
             bottom: 1rem;
             text-align: center;
-            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
+            font-size: clamp(0.4rem, 1.2vw, 0.6rem);
             color: #ccc;
             width: 100%;
         }
@@ -172,7 +176,6 @@
 <body>
 <div class="game-wrapper">
     <div class="game-container">
-        <h1 class="text-[clamp(1rem,4vw,1.5rem)] md:text-[clamp(1.5rem,6vw,2rem)] text-center absolute top-0 text-[#33ff33] z-10">SNAKE BATTLE</h1>
         <canvas id="gameCanvas"></canvas>
         <div class="ui-panel">
             <div>PONTOS: <span id="score">0</span></div>
@@ -181,10 +184,12 @@
         <div class="controls text-center text-gray-400 hidden md:block">
             Use as SETAS ◄ e ► para virar | ESPAÇO para acelerar
         </div>
-        <div id="mobile-controls" class="md:hidden">
+        <div id="joystick-controls" class="mobile-only">
             <div id="joystick-area">
                 <div id="joystick"></div>
             </div>
+        </div>
+        <div id="boost-controls" class="mobile-only">
             <button id="boost-btn">⚡</button>
         </div>
     </div>
@@ -214,613 +219,8 @@
     const boostBtn = document.getElementById('boost-btn');
     const joystickArea = document.getElementById('joystick-area');
     const joystick = document.getElementById('joystick');
-
-    const NUM_BOTS = 15;
-    const NUM_PELLETS = 250;
-    const WORLD_WIDTH = 2500;
-    const WORLD_HEIGHT = 2500;
-
-    // --- Estado do Jogo ---
-    let player, bots, pellets;
-    let gameInterval, isGameOver;
-    let camera = { x: 0, y: 0 };
-    let keys = { ArrowLeft: false, ArrowRight: false, Space: false };
-    let joystickActive = false;
-    let joystickCenter = { x: 0, y: 0 };
-    
-    const BOT_NAMES = ["Ghost", "Viper", "Raptor", "Siren", "Jaws", "Spike", "Shadow", "Blaze", "Fury", "Titan", "Reaper", "Worm", "Doom", "Cobra", "Venom"];
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // --- Funções Principais ---
-    function createSnake(x, y, color, name) {
-        return {
-            name: name,
-            body: [{ x, y }],
-            angle: Math.random() * 2 * Math.PI,
-            speed: 1.8,
-            turnSpeed: 0.05,
-            radius: 7,
-            color: color,
-            score: 0,
-            isBoosting: false,
-            targetPellet: null,
-            attractionRadius: 60,
-            attractionSpeed: 0.3
-        };
-    }
-
-    function startGame() {
-        resizeCanvas();
-        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00', 'Você');
-        bots = [];
-        const usedNames = [...BOT_NAMES];
-        for (let i = 0; i < NUM_BOTS; i++) {
-            const nameIndex = Math.floor(Math.random() * usedNames.length);
-            const botName = usedNames.splice(nameIndex, 1)[0];
-            bots.push(createSnake(
-                Math.random() * WORLD_WIDTH,
-                Math.random() * WORLD_HEIGHT,
-                `hsl(${Math.random() * 360}, 100%, 75%)`,
-                botName
-            ));
-        }
-        pellets = [];
-        for (let i = 0; i < NUM_PELLETS; i++) {
-            spawnPellet();
-        }
-        isGameOver = false;
-        keys = { ArrowLeft: false, ArrowRight: false, Space: false };
-        joystickActive = false;
-        joystick.style.transform = 'translate(-50%, -50%)';
-        updateUI();
-        gameOverMessage.style.display = 'none';
-        if (gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(gameLoop, 1000 / 60);
-    }
-    
-    function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        canvas.width = size * dpr;
-        canvas.height = size * dpr;
-        canvas.style.width = `${size}px`;
-        canvas.style.height = `${size}px`;
-        ctx.scale(dpr, dpr);
-    }
-
-    function gameLoop() {
-        if (isGameOver) return;
-        handleInput();
-        updatePlayer();
-        updateBots();
-        updatePellets();
-        updateCamera();
-        checkCollisions();
-        drawGame();
-        updateLeaderboard();
-        updateUI();
-    }
-
-    // --- Desenho ---
-    function drawGame() {
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
-        ctx.save();
-        ctx.translate(-camera.x, -camera.y);
-        drawWorldBackground();
-        pellets.forEach(p => drawCircle(p.x, p.y, p.radius, p.color));
-        if (player) drawSnake(player);
-        bots.forEach(drawSnake);
-        ctx.restore();
-    }
-
-    function drawSnake(snake) {
-        for (let i = 0; i < snake.body.length; i++) {
-            const segment = snake.body[i];
-            const radius = snake.radius * (1 - i / (snake.body.length * 1.5));
-            drawCircle(segment.x, segment.y, Math.max(2, radius), snake.color);
-        }
-    }
-    
-    function drawCircle(x, y, radius, color) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fill();
-    }
-
-    function drawWorldBackground() {
-        ctx.strokeStyle = '#33ff33';
-        ctx.lineWidth = 10;
-        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.lineWidth = 1;
-        const gridSize = 50;
-        for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, WORLD_HEIGHT);
-            ctx.stroke();
-        }
-        for (let y = 0; y <= WORLD_HEIGHT; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(WORLD_WIDTH, y);
-            ctx.stroke();
-        }
-    }
-
-    // --- Lógica de Atualização ---
-    function handleInput() {
-        if (!player) return;
-        if (!isMobile) {
-            if (keys.ArrowLeft) player.angle -= player.turnSpeed;
-            if (keys.ArrowRight) player.angle += player.turnSpeed;
-        }
-        player.isBoosting = keys.Space;
-    }
-
-    function updatePlayer() {
-        if (!player) return;
-        moveSnake(player);
-    }
-
-    function updateBots() {
-        bots.forEach(bot => {
-            if (!bot.targetPellet || Math.random() < 0.005) {
-                bot.targetPellet = findClosestPellet(bot);
-            }
-            if (bot.targetPellet) {
-                const targetAngle = Math.atan2(bot.targetPellet.y - bot.body[0].y, bot.targetPellet.x - bot.body[0].x);
-                bot.angle += Math.sign(targetAngle - bot.angle) * bot.turnSpeed * 0.5;
-            }
-            moveSnake(bot);
-        });
-    }
-    
-    function moveSnake(snake) {
-        const currentSpeed = snake.isBoosting ? snake.speed * 2 : snake.speed;
-        const head = snake.body[0];
-        const newHead = {
-            x: head.x + Math.cos(snake.angle) * currentSpeed,
-            y: head.y + Math.sin(snake.angle) * currentSpeed
-        };
-        snake.body.unshift(newHead);
-        
-        const snakeLength = 15 + snake.score;
-        while (snake.body.length > snakeLength && snake.body.length > 2) {
-            snake.body.pop();
-        }
-    }
-
-    function updatePellets() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        pellets.forEach(p => {
-            p.vx *= 0.95;
-            p.vy *= 0.95;
-            allSnakes.forEach(snake => {
-                if (!snake) return;
-                const head = snake.body[0];
-                const distance = Math.hypot(p.x - head.x, p.y - head.y);
-                if (distance < snake.attractionRadius) {
-                    const dx = head.x - p.x;
-                    const dy = head.y - p.y;
-                    p.vx += (dx / distance) * snake.attractionSpeed;
-                    p.vy += (dy / distance) * snake.attractionSpeed;
-                }
-            });
-            p.x += p.vx;
-            p.y += p.vy;
-        });
-    }
-
-    function updateCamera() {
-        if (!player) return;
-        const canvasSize = Math.min(window.innerWidth, window.innerHeight);
-        camera.x = player.body[0].x - canvasSize / 2;
-        camera.y = player.body[0].y - canvasSize / 2;
-        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvasSize));
-        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvasSize));
-    }
-
-    // --- Colisões, Morte e Fim de Jogo ---
-    function checkCollisions() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        for (let i = allSnakes.length - 1; i >= 0; i--) {
-            const currentSnake = allSnakes[i];
-            if (!currentSnake) continue;
-            const head = currentSnake.body[0];
-            if (head.x < currentSnake.radius || head.x > WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > WORLD_HEIGHT - currentSnake.radius) {
-                killSnake(currentSnake);
-                continue;
-            }
-            for (let j = pellets.length - 1; j >= 0; j--) {
-                const p = pellets[j];
-                if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
-                    currentSnake.score += p.value;
-                    pellets.splice(j, 1);
-                    spawnPellet();
-                }
-            }
-            for (let j = 0; j < allSnakes.length; j++) {
-                const otherSnake = allSnakes[j];
-                if (!otherSnake) continue;
-                for (let k = 0; k < otherSnake.body.length; k++) {
-                    if (currentSnake === otherSnake && k < 4) continue;
-                    const segment = otherSnake.body[k];
-                    if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
-                        killSnake(currentSnake);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    function killSnake(snake) {
-        snake.body.forEach((segment, i) => {
-            if (i % 5 === 0) {
-                spawnPellet(segment.x, segment.y, 5, "#ffffff");
-            }
-        });
-        if (snake === player) {
-            endGame(player ? player.score : 0);
-            player = null;
-        } else {
-            const botIndex = bots.indexOf(snake);
-            if (botIndex > -1) {
-                bots.splice(botIndex, 1);
-            }
-        }
-    }
-
-    function endGame(score) {
-        isGameOver = true;
-        clearInterval(gameInterval);
-        finalScoreElement.textContent = `Pontuação Final: ${score}`;
-        gameOverMessage.style.display = "flex";
-    }
-    
-    // --- Funções de UI ---
-    function updateLeaderboard() {
-        const allSnakes = [player, ...bots].filter(s => s);
-        allSnakes.sort((a, b) => b.score - a.score);
-        leaderboardList.innerHTML = '';
-        const top5 = allSnakes.slice(0, 5);
-        top5.forEach(snake => {
-            const li = document.createElement('li');
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = snake.name;
-            if (snake === player) {
-                nameSpan.style.color = player.color;
-            }
-            const scoreSpan = document.createElement('span');
-            scoreSpan.textContent = snake.score;
-            li.appendChild(nameSpan);
-            li.appendChild(scoreSpan);
-            leaderboardList.appendChild(li);
-        });
-    }
-
-    function updateUI() {
-        scoreElement.textContent = player ? player.score : 0;
-        snakesAliveElement.textContent = bots.length + (player ? 1 : 0);
-    }
-
-    // --- Controles e Inicialização ---
-    function spawnPellet(x, y, value = 1, color) {
-        pellets.push({
-            x: x || Math.random() * WORLD_WIDTH,
-            y: y || Math.random() * WORLD_HEIGHT,
-            radius: value > 1 ? 4 : 2,
-            value: value,
-            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
-            vx: 0,
-            vy: 0
-        });
-    }
-
-    function findClosestPellet(snake) {
-        let closestPellet = null;
-        let minDistance = Infinity;
-        pellets.forEach(pellet => {
-            const distance = Math.hypot(snake.body[0].x - pellet.x, snake.body[0].y - pellet.y);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPellet = pellet;
-            }
-        });
-        return closestPellet;
-    }
-
-    // --- Eventos ---
-    window.addEventListener('resize', resizeCanvas);
-    if (!isMobile) {
-        document.addEventListener('keydown', e => {
-            if (e.code in keys) {
-                e.preventDefault();
-                keys[e.code] = true;
-            }
-        });
-        document.addEventListener('keyup', e => {
-            if (e.code in keys) {
-                e.preventDefault();
-                keys[e.code] = false;
-            }
-        });
-    }
-
-    if (isMobile) {
-        joystickArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = joystickArea.getBoundingClientRect();
-            joystickCenter = {
-                x: rect.left + rect.width / 2,
-                y: rect.top + rect.height / 2
-            };
-            joystickActive = true;
-            joystickArea.classList.add('active');
-            updateJoystick(touch);
-        });
-
-        joystickArea.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (joystickActive) {
-                updateJoystick(e.touches[0]);
-            }
-        });
-
-        joystickArea.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            joystickActive = false;
-            joystickArea.classList.remove('active');
-            joystick.style.transform = 'translate(-50%, -50%)';
-        });
-
-        boostBtn.addEventListener('touchstart', e => {
-            e.preventDefault();
-            keys.Space = true;
-        });
-        boostBtn.addEventListener('touchend', e => {
-            e.preventDefault();
-            keys.Space = false;
-        });
-    }
-
-    function updateJoystick(touch) {
-        const dx = touch.clientX - joystickCenter.x;
-        const dy = touch.clientY - joystickCenter.y;
-        const maxDistance = Math.min(window.innerWidth, window.innerHeight) * 0.08;
-        const distance = Math.min(maxDistance, Math.hypot(dx, dy));
-        const angle = Math.atan2(dy, dx);
-        const joystickX = distance * Math.cos(angle);
-        const joystickY = distance * Math.sin(angle);
-        const joystickSize = Math.min(window.innerWidth, window深化
-
-System: * The response was cut off because it exceeded the maximum length allowed for a single response. I will now continue from where it left off, ensuring the joystick only appears on mobile devices and the game remains in full-screen mode. I'll complete the `updateJoystick` function and ensure the code is fully functional.
-
-### Continuation of the Code
-
-Below is the complete, adjusted code, continuing from where the previous response was cut off. The `updateJoystick` function is finalized, and all other parts are included to ensure the joystick and boost button appear only on mobile devices, while the game remains in full-screen mode on both computers and mobile devices.
-
-```html
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Clone do Snake.io</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #33ff33;
-            --background-color: #121212;
-            --container-bg: #1a1a1a;
-            --border-color: #4a4a4a;
-        }
-        body {
-            font-family: 'Press Start 2P', cursive;
-            background-color: var(--background-color);
-            color: #ffffff;
-            margin: 0;
-            overflow: hidden;
-            touch-action: none;
-            width: 100vw;
-            height: 100vh;
-        }
-        .game-wrapper {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
-        }
-        canvas#gameCanvas {
-            background-color: #000000;
-            border: 2px solid var(--primary-color);
-            width: 100%;
-            height: 100%;
-            max-width: 100vw;
-            max-height: 100vh;
-            object-fit: contain;
-        }
-        .ui-panel {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            display: flex;
-            justify-content: space-between;
-            width: calc(100% - 2rem);
-            font-size: clamp(0.6rem, 2vw, 0.8rem);
-            z-index: 100;
-        }
-        .message-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            border: 2px solid var(--primary-color);
-            text-align: center;
-            z-index: 200;
-            width: 80%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            font-size: clamp(0.8rem, 2.5vw, 1rem);
-        }
-        #leaderboard {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 0.5rem;
-            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
-            width: clamp(120px, 20vw, 180px);
-            color: #ccc;
-            z-index: 100;
-        }
-        #leaderboard h3 {
-            margin: 0 0 0.5rem 0;
-            color: var(--primary-color);
-            text-align: center;
-            font-size: clamp(0.6rem, 1.8vw, 0.9rem);
-        }
-        #leaderboard ol {
-            margin: 0;
-            padding: 0;
-            list-style-type: none;
-        }
-        #leaderboard li {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.3rem;
-        }
-        #leaderboard li span:first-child {
-            font-weight: bold;
-            color: #fff;
-        }
-        #mobile-controls {
-            position: absolute;
-            bottom: 1rem;
-            left: 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            z-index: 100;
-        }
-        #mobile-controls button {
-            background-color: rgba(55, 65, 81, 0.7);
-            border: 2px solid var(--border-color);
-            color: white;
-            font-size: clamp(1.5rem, 5vw, 2rem);
-            width: clamp(50px, 15vw, 70px);
-            height: clamp(50px, 15vw, 70px);
-            border-radius: 50%;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        #boost-btn {
-            font-size: clamp(1rem, 4vw, 1.5rem);
-            width: clamp(60px, 18vw, 90px);
-            height: clamp(60px, 18vw, 90px);
-        }
-        #joystick-area {
-            width: clamp(80px, 20vw, 100px);
-            height: clamp(80px, 20vw, 100px);
-            background: rgba(55, 65, 81, 0.7);
-            border-radius: 50%;
-            position: relative;
-            touch-action: none;
-        }
-        #joystick-area.active {
-            box-shadow: 0 0 10px rgba(51, 255, 51, 0.8);
-        }
-        #joystick {
-            width: clamp(32px, 8vw, 40px);
-            height: clamp(32px, 8vw, 40px);
-            background: #33ff33;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .controls {
-            position: absolute;
-            bottom: 1rem;
-            text-align: center;
-            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
-            color: #ccc;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-<div class="game-wrapper">
-    <div class="game-container">
-        <h1 class="text-[clamp(1rem,4vw,1.5rem)] md:text-[clamp(1.5rem,6vw,2rem)] text-center absolute top-0 text-[#33ff33] z-10">SNAKE BATTLE</h1>
-        <canvas id="gameCanvas"></canvas>
-        <div class="ui-panel">
-            <div>PONTOS: <span id="score">0</span></div>
-            <div>VIVOS: <span id="snakes-alive">1</span></div>
-        </div>
-        <div class="controls text-center text-gray-400 hidden md:block">
-            Use as SETAS ◄ e ► para virar | ESPAÇO para acelerar
-        </div>
-        <div id="mobile-controls" class="md:hidden">
-            <div id="joystick-area">
-                <div id="joystick"></div>
-            </div>
-            <button id="boost-btn">⚡</button>
-        </div>
-    </div>
-</div>
-
-<div id="leaderboard" class="hidden md:block">
-    <h3>Classificação</h3>
-    <ol id="leaderboard-list"></ol>
-</div>
-
-<div id="gameOverMessage" class="message-box" style="display: none;">
-    <h2 class="message-box-title">Fim de Jogo!</h2>
-    <p id="finalScore" class="message-box-score"></p>
-    <button id="restartButton">Jogar Novamente</button>
-</div>
-
-<script>
-    // --- Configurações do Jogo ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const leaderboardList = document.getElementById('leaderboard-list');
-    const scoreElement = document.getElementById('score');
-    const snakesAliveElement = document.getElementById('snakes-alive');
-    const gameOverMessage = document.getElementById('gameOverMessage');
-    const finalScoreElement = document.getElementById('finalScore');
-    const restartButton = document.getElementById('restartButton');
-    const boostBtn = document.getElementById('boost-btn');
-    const joystickArea = document.getElementById('joystick-area');
-    const joystick = document.getElementById('joystick');
+    const joystickControls = document.getElementById('joystick-controls');
+    const boostControls = document.getElementById('boost-controls');
 
     const NUM_BOTS = 15;
     const NUM_PELLETS = 250;
@@ -879,6 +279,8 @@ Below is the complete, adjusted code, continuing from where the previous respons
         keys = { ArrowLeft: false, ArrowRight: false, Space: false };
         joystickActive = false;
         if (isMobile) {
+            joystickControls.classList.add('mobile-only');
+            boostControls.classList.add('mobile-only');
             joystick.style.transform = 'translate(-50%, -50%)';
         }
         updateUI();
@@ -912,7 +314,7 @@ Below is the complete, adjusted code, continuing from where the previous respons
 
     // --- Desenho ---
     function drawGame() {
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = 'linear-gradient(45deg, #0a0a0a, #1a1a1a)';
         ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
@@ -940,10 +342,10 @@ Below is the complete, adjusted code, continuing from where the previous respons
 
     function drawWorldBackground() {
         ctx.strokeStyle = '#33ff33';
-        ctx.lineWidth = 10;
-        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
         ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+        ctx.lineWidth = 0.5;
         const gridSize = 50;
         for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
             ctx.beginPath();
@@ -1160,6 +562,8 @@ Below is the complete, adjusted code, continuing from where the previous respons
     }
 
     if (isMobile) {
+        joystickControls.classList.add('mobile-only');
+        boostControls.classList.add('mobile-only');
         joystickArea.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
@@ -1205,7 +609,7 @@ Below is the complete, adjusted code, continuing from where the previous respons
         const angle = Math.atan2(dy, dx);
         const joystickX = distance * Math.cos(angle);
         const joystickY = distance * Math.sin(angle);
-        const joystickSize = Math.min(window.innerWidth, window.innerHeight) * 0.032;
+        const joystickSize = Math.min(window.innerWidth, window.innerHeight) * 0.028;
         joystick.style.transform = `translate(${joystickX - joystickSize}px, ${joystickY - joystickSize}px)`;
         if (player && distance > maxDistance * 0.25) {
             player.angle = angle;
@@ -1224,4 +628,4 @@ Below is the complete, adjusted code, continuing from where the previous respons
     startGame();
 </script>
 </body>
-</html>S
+</html>
