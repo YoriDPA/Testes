@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="orientation" content="landscape">
     <title>Clone do Snake.io</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -19,35 +20,33 @@
             color: #ffffff;
             margin: 0;
             overflow: hidden;
-            touch-action: none;
             width: 100vw;
             height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .game-wrapper {
             position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            overflow: hidden;
         }
         .game-container {
             position: relative;
-            width: 100%;
-            height: 100%;
+            width: 1920px;
+            height: 1080px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 0;
+            overflow: hidden;
         }
         canvas#gameCanvas {
             background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
             border: 1px solid var(--primary-color);
             width: 100%;
             height: 100%;
-            max-width: 100vw;
-            max-height: 100vh;
             object-fit: contain;
         }
         .ui-panel {
@@ -119,6 +118,21 @@
         .mobile-only {
             display: none;
         }
+        #orientation-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            border: 1px solid var(--primary-color);
+            text-align: center;
+            z-index: 300;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
+            display: none;
+        }
         #joystick-controls {
             position: absolute;
             bottom: 1rem;
@@ -132,8 +146,8 @@
             z-index: 100;
         }
         #joystick-area {
-            width: clamp(70px, 18vw, 90px);
-            height: clamp(70px, 18vw, 90px);
+            width: clamp(70px, 6vw, 90px);
+            height: clamp(70px, 6vw, 90px);
             background: rgba(55, 65, 81, 0.7);
             border-radius: 50%;
             position: relative;
@@ -143,8 +157,8 @@
             box-shadow: 0 0 8px rgba(51, 255, 51, 0.7);
         }
         #joystick {
-            width: clamp(28px, 7vw, 35px);
-            height: clamp(28px, 7vw, 35px);
+            width: clamp(28px, 2.5vw, 35px);
+            height: clamp(28px, 2.5vw, 35px);
             background: #33ff33;
             border-radius: 50%;
             position: absolute;
@@ -156,9 +170,9 @@
             background-color: rgba(55, 65, 81, 0.7);
             border: 1px solid var(--border-color);
             color: white;
-            font-size: clamp(0.9rem, 3.5vw, 1.3rem);
-            width: clamp(50px, 15vw, 80px);
-            height: clamp(50px, 15vw, 80px);
+            font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+            width: clamp(50px, 5vw, 80px);
+            height: clamp(50px, 5vw, 80px);
             border-radius: 50%;
             user-select: none;
             -webkit-user-select: none;
@@ -192,6 +206,7 @@
         <div id="boost-controls" class="mobile-only">
             <button id="boost-btn">⚡</button>
         </div>
+        <div id="orientation-message">Por favor, gire seu dispositivo para o modo paisagem para jogar!</div>
     </div>
 </div>
 
@@ -221,6 +236,7 @@
     const joystick = document.getElementById('joystick');
     const joystickControls = document.getElementById('joystick-controls');
     const boostControls = document.getElementById('boost-controls');
+    const orientationMessage = document.getElementById('orientation-message');
 
     const NUM_BOTS = 15;
     const NUM_PELLETS = 250;
@@ -282,6 +298,7 @@
             joystickControls.classList.add('mobile-only');
             boostControls.classList.add('mobile-only');
             joystick.style.transform = 'translate(-50%, -50%)';
+            checkOrientation();
         }
         updateUI();
         gameOverMessage.style.display = 'none';
@@ -291,11 +308,19 @@
     
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const size = Math.min(window.innerWidth, window.innerHeight);
-        canvas.width = size * dpr;
-        canvas.height = size * dpr;
-        canvas.style.width = `${size}px`;
-        canvas.style.height = `${size}px`;
+        const scaleX = window.innerWidth / 1920;
+        const scaleY = window.innerHeight / 1080;
+        const scale = Math.min(scaleX, scaleY);
+        const width = 1920 * scale;
+        const height = 1080 * scale;
+
+        canvas.width = 1920 * dpr;
+        canvas.height = 1080 * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        canvas.style.position = 'absolute';
+        canvas.style.top = `${(window.innerHeight - height) / 2}px`;
+        canvas.style.left = `${(window.innerWidth - width) / 2}px`;
         ctx.scale(dpr, dpr);
     }
 
@@ -428,10 +453,10 @@
     function updateCamera() {
         if (!player) return;
         const canvasSize = Math.min(window.innerWidth, window.innerHeight);
-        camera.x = player.body[0].x - canvasSize / 2;
-        camera.y = player.body[0].y - canvasSize / 2;
-        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvasSize));
-        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvasSize));
+        camera.x = player.body[0].x - (1920 / 2); // Ajustado para 1920x1080
+        camera.y = player.body[0].y - (1080 / 2); // Ajustado para 1920x1080
+        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - 1920));
+        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - 1080));
     }
 
     // --- Colisões, Morte e Fim de Jogo ---
@@ -544,8 +569,25 @@
         return closestPellet;
     }
 
+    // --- Orientação ---
+    function checkOrientation() {
+        if (isMobile) {
+            if (window.innerWidth < window.innerHeight) {
+                orientationMessage.style.display = 'block';
+                if (gameInterval) clearInterval(gameInterval);
+            } else {
+                orientationMessage.style.display = 'none';
+                if (!gameInterval) gameInterval = setInterval(gameLoop, 1000 / 60);
+            }
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        if (isMobile) checkOrientation();
+    });
+
     // --- Eventos ---
-    window.addEventListener('resize', resizeCanvas);
     if (!isMobile) {
         document.addEventListener('keydown', e => {
             if (e.code in keys) {
