@@ -34,8 +34,8 @@
         }
         .game-container {
             position: relative;
-            width: 1920px;
-            height: 1080px;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -45,55 +45,47 @@
         canvas#gameCanvas {
             background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
             border: 1px solid var(--primary-color);
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+        .ui-panel, #leaderboard, #gameOverMessage, #orientation-message {
+            position: absolute;
+            transition: opacity 0.3s ease;
         }
         .ui-panel {
-            position: absolute;
             top: 0.5rem;
             left: 0.5rem;
             display: flex;
             flex-direction: column;
             gap: 0.2rem;
-            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
+            font-size: clamp(0.5rem, 1vw, 0.7rem);
             z-index: 100;
             background: rgba(0, 0, 0, 0.6);
             padding: 0.2rem 0.5rem;
             border-radius: 3px;
+            opacity: 1;
         }
-        .message-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 1rem;
-            border-radius: 5px;
-            border: 1px solid var(--primary-color);
-            text-align: center;
-            z-index: 200;
-            width: 70%;
-            max-width: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.8rem;
-            font-size: clamp(0.7rem, 2vw, 0.9rem);
+        .ui-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         #leaderboard {
-            position: absolute;
             top: 0.5rem;
             right: 0.5rem;
             background-color: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--border-color);
             border-radius: 3px;
             padding: 0.3rem;
-            font-size: clamp(0.4rem, 1.2vw, 0.6rem);
-            width: clamp(100px, 18vw, 150px);
+            font-size: clamp(0.4rem, 1vw, 0.6rem);
+            width: clamp(100px, 15vw, 150px);
             color: #ccc;
             z-index: 100;
+            opacity: 1;
+        }
+        #leaderboard.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         #leaderboard h3 {
             margin: 0 0 0.3rem 0;
@@ -115,11 +107,7 @@
             font-weight: bold;
             color: #fff;
         }
-        .mobile-only {
-            display: none;
-        }
-        #orientation-message {
-            position: absolute;
+        .message-box {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -129,8 +117,32 @@
             border-radius: 5px;
             border: 1px solid var(--primary-color);
             text-align: center;
+            z-index: 200;
+            width: 70%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
+            opacity: 1;
+        }
+        .message-box.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #orientation-message {
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            border: 1px solid var(--primary-color);
+            text-align: center;
             z-index: 300;
             font-size: clamp(0.7rem, 2vw, 0.9rem);
+            display: none;
+        }
+        .mobile-only {
             display: none;
         }
         #joystick-controls {
@@ -215,7 +227,7 @@
     <ol id="leaderboard-list"></ol>
 </div>
 
-<div id="gameOverMessage" class="message-box" style="display: none;">
+<div id="gameOverMessage" class="message-box">
     <h2 class="message-box-title">Fim de Jogo!</h2>
     <p id="finalScore" class="message-box-score"></p>
     <button id="restartButton">Jogar Novamente</button>
@@ -237,6 +249,8 @@
     const joystickControls = document.getElementById('joystick-controls');
     const boostControls = document.getElementById('boost-controls');
     const orientationMessage = document.getElementById('orientation-message');
+    const uiPanel = document.querySelector('.ui-panel');
+    const leaderboard = document.getElementById('leaderboard');
 
     const NUM_BOTS = 15;
     const NUM_PELLETS = 250;
@@ -300,27 +314,23 @@
             joystick.style.transform = 'translate(-50%, -50%)';
             checkOrientation();
         }
+        showTemporaryUI();
         updateUI();
-        gameOverMessage.style.display = 'none';
+        gameOverMessage.classList.remove('hidden');
+        setTimeout(() => gameOverMessage.classList.add('hidden'), 5000); // Exibe por 5 segundos
         if (gameInterval) clearInterval(gameInterval);
         gameInterval = setInterval(gameLoop, 1000 / 60);
     }
     
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const scaleX = window.innerWidth / 1920;
-        const scaleY = window.innerHeight / 1080;
-        const scale = Math.min(scaleX, scaleY);
-        const width = 1920 * scale;
-        const height = 1080 * scale;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-        canvas.width = 1920 * dpr;
-        canvas.height = 1080 * dpr;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
-        canvas.style.position = 'absolute';
-        canvas.style.top = `${(window.innerHeight - height) / 2}px`;
-        canvas.style.left = `${(window.innerWidth - width) / 2}px`;
         ctx.scale(dpr, dpr);
     }
 
@@ -339,8 +349,10 @@
 
     // --- Desenho ---
     function drawGame() {
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
         ctx.fillStyle = 'linear-gradient(45deg, #0a0a0a, #1a1a1a)';
-        ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+        ctx.fillRect(0, 0, width, height);
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
         drawWorldBackground();
@@ -366,11 +378,15 @@
     }
 
     function drawWorldBackground() {
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
+        const scaleX = width / WORLD_WIDTH;
+        const scaleY = height / WORLD_HEIGHT;
         ctx.strokeStyle = '#33ff33';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1 * Math.min(scaleX, scaleY);
         ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.5 * Math.min(scaleX, scaleY);
         const gridSize = 50;
         for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
             ctx.beginPath();
@@ -452,11 +468,15 @@
 
     function updateCamera() {
         if (!player) return;
-        const canvasSize = Math.min(window.innerWidth, window.innerHeight);
-        camera.x = player.body[0].x - (1920 / 2); // Ajustado para 1920x1080
-        camera.y = player.body[0].y - (1080 / 2); // Ajustado para 1920x1080
-        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - 1920));
-        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - 1080));
+        const width = canvas.width / (window.devicePixelRatio || 1);
+        const height = canvas.height / (window.devicePixelRatio || 1);
+        const scale = Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
+        const visibleWidth = width / scale;
+        const visibleHeight = height / scale;
+        camera.x = player.body[0].x - (visibleWidth / 2);
+        camera.y = player.body[0].y - (visibleHeight / 2);
+        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - visibleWidth));
+        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - visibleHeight));
     }
 
     // --- Colisões, Morte e Fim de Jogo ---
@@ -514,7 +534,11 @@
         isGameOver = true;
         clearInterval(gameInterval);
         finalScoreElement.textContent = `Pontuação Final: ${score}`;
-        gameOverMessage.style.display = "flex";
+        gameOverMessage.classList.remove('hidden');
+        setTimeout(() => {
+            gameOverMessage.classList.add('hidden');
+            startGame(); // Reinicia automaticamente após 5 segundos
+        }, 5000);
     }
     
     // --- Funções de UI ---
@@ -536,37 +560,24 @@
             li.appendChild(scoreSpan);
             leaderboardList.appendChild(li);
         });
+        leaderboard.classList.remove('hidden');
+        setTimeout(() => leaderboard.classList.add('hidden'), 3000); // Exibe por 3 segundos
     }
 
     function updateUI() {
         scoreElement.textContent = player ? player.score : 0;
         snakesAliveElement.textContent = bots.length + (player ? 1 : 0);
+        uiPanel.classList.remove('hidden');
+        setTimeout(() => uiPanel.classList.add('hidden'), 3000); // Exibe por 3 segundos
     }
 
-    // --- Controles e Inicialização ---
-    function spawnPellet(x, y, value = 1, color) {
-        pellets.push({
-            x: x || Math.random() * WORLD_WIDTH,
-            y: y || Math.random() * WORLD_HEIGHT,
-            radius: value > 1 ? 4 : 2,
-            value: value,
-            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`,
-            vx: 0,
-            vy: 0
-        });
-    }
-
-    function findClosestPellet(snake) {
-        let closestPellet = null;
-        let minDistance = Infinity;
-        pellets.forEach(pellet => {
-            const distance = Math.hypot(snake.body[0].x - pellet.x, snake.body[0].y - pellet.y);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestPellet = pellet;
-            }
-        });
-        return closestPellet;
+    function showTemporaryUI() {
+        uiPanel.classList.remove('hidden');
+        leaderboard.classList.remove('hidden');
+        setTimeout(() => {
+            uiPanel.classList.add('hidden');
+            leaderboard.classList.add('hidden');
+        }, 3000);
     }
 
     // --- Orientação ---
