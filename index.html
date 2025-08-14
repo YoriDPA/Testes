@@ -7,9 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #33ff33;
+            --background-color: #121212;
+            --container-bg: #1a1a1a;
+            --border-color: #4a4a4a;
+        }
         body {
             font-family: 'Press Start 2P', cursive;
-            background-color: #121212;
+            background-color: var(--background-color);
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -17,9 +23,10 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            touch-action: none; /* Desativa zoom e scroll por toque no corpo */
+            touch-action: none;
         }
         .game-wrapper {
+            position: relative;
             width: 100%;
             height: 100%;
             display: flex;
@@ -29,23 +36,23 @@
             padding: 10px;
         }
         .game-container {
-            border: 4px solid #4a4a4a;
+            border: 4px solid var(--border-color);
             border-radius: 10px;
             box-shadow: 0 0 25px rgba(0, 255, 127, 0.5);
-            background-color: #1a1a1a;
+            background-color: var(--container-bg);
             padding: 10px;
             width: 100%;
-            max-width: 640px; /* Limite para ecrãs grandes */
+            max-width: 640px;
             display: flex;
             flex-direction: column;
         }
-        canvas {
+        canvas#gameCanvas {
             background-color: #000000;
-            border: 2px solid #33ff33;
+            border: 2px solid var(--primary-color);
             border-radius: 5px;
-            width: 100%; /* Canvas preenche o container */
+            width: 100%;
             height: auto;
-            aspect-ratio: 1 / 1; /* Mantém o canvas quadrado */
+            aspect-ratio: 1 / 1;
         }
         .ui-panel {
             display: flex;
@@ -61,30 +68,71 @@
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
-            border: 2px solid #33ff33;
+            border: 2px solid var(--primary-color);
             text-align: center;
-            font-size: 1.2rem;
-            z-index: 100;
+            z-index: 200;
             width: 80%;
             max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
-        /* NOVIDADE: Estilos para os controlos de toque */
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 0.7rem;
+            width: 180px;
+            color: #ccc;
+        }
+        #leaderboard h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        #leaderboard ol {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+        #leaderboard li {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        #leaderboard li span:first-child {
+            font-weight: bold;
+            color: #fff;
+        }
         #mobile-controls {
             width: 100%;
             margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         #mobile-controls button {
             background-color: rgba(55, 65, 81, 0.7);
-            border: 2px solid #4a4a4a;
+            border: 2px solid var(--border-color);
             color: white;
             font-size: 2rem;
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            user-select: none; /* Evita seleção de texto ao tocar */
+            user-select: none;
             -webkit-user-select: none;
+        }
+        #boost-btn {
+            font-size: 1.5rem;
+            width: 90px;
+            height: 90px;
         }
     </style>
 </head>
@@ -99,20 +147,24 @@
             <div>VIVOS: <span id="snakes-alive">1</span></div>
         </div>
         <div class="controls text-xs text-center mt-2 text-gray-400 hidden md:block">
-            Use as SETAS ◀ e ▶ para virar
+            Use as SETAS ◀ e ▶ para virar | ESPAÇO para acelerar
         </div>
-        <!-- NOVIDADE: Botões para telemóvel -->
-        <div id="mobile-controls" class="flex justify-between md:hidden">
+        <div id="mobile-controls" class="md:hidden">
             <button id="left-btn">◀</button>
+            <button id="boost-btn">⚡</button>
             <button id="right-btn">▶</button>
         </div>
     </div>
 </div>
 
+<div id="leaderboard" class="hidden md:block">
+    <h3>Classificação</h3>
+    <ol id="leaderboard-list"></ol>
+</div>
 
 <div id="gameOverMessage" class="message-box" style="display: none;">
-    <div>Fim de Jogo!</div>
-    <div id="finalScore" class="text-lg mt-2"></div>
+    <h2 class="message-box-title">Fim de Jogo!</h2>
+    <p id="finalScore" class="message-box-score"></p>
     <button id="restartButton">Jogar Novamente</button>
 </div>
 
@@ -121,6 +173,7 @@
     // --- Configurações do Jogo ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const leaderboardList = document.getElementById('leaderboard-list');
     const scoreElement = document.getElementById('score');
     const snakesAliveElement = document.getElementById('snakes-alive');
     const gameOverMessage = document.getElementById('gameOverMessage');
@@ -128,6 +181,7 @@
     const restartButton = document.getElementById('restartButton');
     const leftBtn = document.getElementById('left-btn');
     const rightBtn = document.getElementById('right-btn');
+    const boostBtn = document.getElementById('boost-btn');
 
     const NUM_BOTS = 15;
     const NUM_PELLETS = 250;
@@ -138,11 +192,14 @@
     let player, bots, pellets;
     let gameInterval, isGameOver;
     let camera = { x: 0, y: 0 };
-    let keys = { ArrowLeft: false, ArrowRight: false };
+    let keys = { ArrowLeft: false, ArrowRight: false, Space: false };
+    
+    const BOT_NAMES = ["Ghost", "Viper", "Raptor", "Siren", "Jaws", "Spike", "Shadow", "Blaze", "Fury", "Titan", "Reaper", "Worm", "Doom", "Cobra", "Venom"];
 
     // --- Funções Principais ---
-    function createSnake(x, y, color) {
+    function createSnake(x, y, color, name) {
         return {
+            name: name,
             body: [{ x, y }],
             angle: Math.random() * 2 * Math.PI,
             speed: 1.8,
@@ -150,20 +207,24 @@
             radius: 7,
             color: color,
             score: 0,
+            isBoosting: false,
             targetPellet: null
         };
     }
 
     function startGame() {
         resizeCanvas();
-        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00');
+        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00', 'Você');
         bots = [];
-        const botColors = ['#ff00ff', '#00ffff', '#ffff00', '#ff8800', '#ff0088', '#8800ff', '#ffffff'];
+        const usedNames = [...BOT_NAMES];
         for (let i = 0; i < NUM_BOTS; i++) {
+            const nameIndex = Math.floor(Math.random() * usedNames.length);
+            const botName = usedNames.splice(nameIndex, 1)[0];
             bots.push(createSnake(
                 Math.random() * WORLD_WIDTH,
                 Math.random() * WORLD_HEIGHT,
-                botColors[i % botColors.length]
+                `hsl(${Math.random() * 360}, 100%, 75%)`,
+                botName
             ));
         }
         pellets = [];
@@ -171,8 +232,7 @@
             spawnPellet();
         }
         isGameOver = false;
-        keys.ArrowLeft = false;
-        keys.ArrowRight = false;
+        keys = { ArrowLeft: false, ArrowRight: false, Space: false };
         updateUI();
         gameOverMessage.style.display = 'none';
         if (gameInterval) clearInterval(gameInterval);
@@ -187,29 +247,42 @@
 
     function gameLoop() {
         if (isGameOver) return;
+        handleInput();
         updatePlayer();
         updateBots();
         updateCamera();
         checkCollisions();
         drawGame();
+        updateLeaderboard();
         updateUI();
     }
 
+    // --- Desenho ---
     function drawGame() {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
         drawWorldBackground();
-        pellets.forEach(p => {
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
-            ctx.fill();
-        });
+        pellets.forEach(p => drawCircle(p.x, p.y, p.radius, p.color));
         if (player) drawSnake(player);
         bots.forEach(drawSnake);
         ctx.restore();
+    }
+
+    function drawSnake(snake) {
+        for (let i = 0; i < snake.body.length; i++) {
+            const segment = snake.body[i];
+            const radius = snake.radius * (1 - i / (snake.body.length * 1.5)); // Cauda afina
+            drawCircle(segment.x, segment.y, Math.max(2, radius), snake.color);
+        }
+    }
+    
+    function drawCircle(x, y, radius, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fill();
     }
 
     function drawWorldBackground() {
@@ -233,35 +306,22 @@
         }
     }
 
-    function drawSnake(snake) {
-        ctx.fillStyle = snake.color;
-        snake.body.forEach(segment => {
-            ctx.beginPath();
-            ctx.arc(segment.x, segment.y, snake.radius, 0, 2 * Math.PI);
-            ctx.fill();
-        });
+    // --- Lógica de Atualização ---
+    function handleInput() {
+        if (!player) return;
+        if (keys.ArrowLeft) player.angle -= player.turnSpeed;
+        if (keys.ArrowRight) player.angle += player.turnSpeed;
+        // ALTERAÇÃO: Agora não é mais necessário verificar os pontos para acelerar
+        player.isBoosting = keys.Space;
     }
 
     function updatePlayer() {
         if (!player) return;
-        if (keys.ArrowLeft) player.angle -= player.turnSpeed;
-        if (keys.ArrowRight) player.angle += player.turnSpeed;
         moveSnake(player);
     }
 
-    function updateCamera() {
-        if (!player) return;
-        camera.x = player.body[0].x - canvas.width / 2;
-        camera.y = player.body[0].y - canvas.height / 2;
-        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
-        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
-    }
-
-    // --- CÓDIGO CORRIGIDO E LEGÍVEL ---
-
     function updateBots() {
         bots.forEach(bot => {
-            // Lógica simples de IA para encontrar o pellet mais próximo
             if (!bot.targetPellet || Math.random() < 0.005) {
                 bot.targetPellet = findClosestPellet(bot);
             }
@@ -272,35 +332,45 @@
             moveSnake(bot);
         });
     }
-
+    
     function moveSnake(snake) {
+        const currentSpeed = snake.isBoosting ? snake.speed * 2 : snake.speed;
         const head = snake.body[0];
         const newHead = {
-            x: head.x + Math.cos(snake.angle) * snake.speed,
-            y: head.y + Math.sin(snake.angle) * snake.speed
+            x: head.x + Math.cos(snake.angle) * currentSpeed,
+            y: head.y + Math.sin(snake.angle) * currentSpeed
         };
         snake.body.unshift(newHead);
+
+        // ALTERAÇÃO: Bloco que removia pontos e largava pellets foi removido.
+        
         const snakeLength = 15 + snake.score;
-        while (snake.body.length > snakeLength) {
+        while (snake.body.length > snakeLength && snake.body.length > 2) {
             snake.body.pop();
         }
     }
 
+    function updateCamera() {
+        if (!player) return;
+        camera.x = player.body[0].x - canvas.width / 2;
+        camera.y = player.body[0].y - canvas.height / 2;
+        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
+        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
+    }
+
+    // --- Colisões, Morte e Fim de Jogo ---
     function checkCollisions() {
         const allSnakes = [player, ...bots].filter(s => s);
-
         for (let i = allSnakes.length - 1; i >= 0; i--) {
             const currentSnake = allSnakes[i];
             if (!currentSnake) continue;
             const head = currentSnake.body[0];
 
-            // 1. Colisão com paredes
-            if (head.x < 0 || head.x > WORLD_WIDTH || head.y < 0 || head.y > WORLD_HEIGHT) {
+            if (head.x < currentSnake.radius || head.x > WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > WORLD_HEIGHT - currentSnake.radius) {
                 killSnake(currentSnake);
                 continue;
             }
 
-            // 2. Colisão com pellets
             for (let j = pellets.length - 1; j >= 0; j--) {
                 const p = pellets[j];
                 if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
@@ -310,18 +380,19 @@
                 }
             }
 
-            // 3. Colisão da cabeça com outros corpos
             for (let j = 0; j < allSnakes.length; j++) {
-                if (i === j) continue; // Não colidir consigo mesmo
                 const otherSnake = allSnakes[j];
                 if (!otherSnake) continue;
 
-                for (let k = 1; k < otherSnake.body.length; k++) {
+                for (let k = 0; k < otherSnake.body.length; k++) {
+                    if (currentSnake === otherSnake && k < 4) {
+                        continue; 
+                    }
                     const segment = otherSnake.body[k];
                     if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
                         killSnake(currentSnake);
-                        j = allSnakes.length; // Força a saída do loop 'j'
-                        break; // Sai do loop 'k'
+                        j = allSnakes.length; 
+                        break;
                     }
                 }
             }
@@ -336,7 +407,7 @@
         });
 
         if (snake === player) {
-            endGame();
+            endGame(player ? player.score : 0);
             player = null;
         } else {
             const botIndex = bots.indexOf(snake);
@@ -346,35 +417,32 @@
         }
     }
 
-    function endGame() {
-        const finalScoreValue = player ? player.score : 0;
+    function endGame(score) {
         isGameOver = true;
         clearInterval(gameInterval);
-        finalScoreElement.textContent = `Pontuação Final: ${finalScoreValue}`;
+        finalScoreElement.textContent = `Pontuação Final: ${score}`;
         gameOverMessage.style.display = "flex";
     }
-
-    function spawnPellet(x, y, value = 1, color) {
-        pellets.push({
-            x: x || Math.random() * WORLD_WIDTH,
-            y: y || Math.random() * WORLD_HEIGHT,
-            radius: value > 1 ? 4 : 2,
-            value: value,
-            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`
-        });
-    }
-
-    function findClosestPellet(snake) {
-        let closest = null;
-        let closestDist = Infinity;
-        pellets.forEach(p => {
-            const dist = Math.hypot(snake.body[0].x - p.x, snake.body[0].y - p.y);
-            if (dist < closestDist) {
-                closestDist = dist;
-                closest = p;
+    
+    // --- Funções de UI ---
+    function updateLeaderboard() {
+        const allSnakes = [player, ...bots].filter(s => s);
+        allSnakes.sort((a, b) => b.score - a.score);
+        leaderboardList.innerHTML = '';
+        const top5 = allSnakes.slice(0, 5);
+        top5.forEach(snake => {
+            const li = document.createElement('li');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = snake.name;
+            if (snake === player) {
+                nameSpan.style.color = player.color;
             }
+            const scoreSpan = document.createElement('span');
+            scoreSpan.textContent = snake.score;
+            li.appendChild(nameSpan);
+            li.appendChild(scoreSpan);
+            leaderboardList.appendChild(li);
         });
-        return closest;
     }
 
     function updateUI() {
@@ -384,15 +452,20 @@
 
     // --- Controles ---
     window.addEventListener('resize', resizeCanvas);
-    document.addEventListener('keydown', e => { if (e.key in keys) keys[e.key] = true; });
-    document.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
+    document.addEventListener('keydown', e => { if (e.code in keys) keys[e.code] = true; });
+    document.addEventListener('keyup', e => { if (e.code in keys) keys[e.code] = false; });
     restartButton.addEventListener('click', startGame);
     leftBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.ArrowLeft = true; });
     leftBtn.addEventListener('touchend', e => { e.preventDefault(); keys.ArrowLeft = false; });
     rightBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.ArrowRight = true; });
     rightBtn.addEventListener('touchend', e => { e.preventDefault(); keys.ArrowRight = false; });
+    boostBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.Space = true; });
+    boostBtn.addEventListener('touchend', e => { e.preventDefault(); keys.Space = false; });
 
     // --- Inicialização ---
+    function spawnPellet(t,o,e=1,a){pellets.push({x:t||Math.random()*WORLD_WIDTH,y:o||Math.random()*WORLD_HEIGHT,radius:e>1?4:2,value:e,color:a||`hsl(${360*Math.random()}, 100%, 50%)`})}
+    function findClosestPellet(t){let o=null,e=1/0;return pellets.forEach(a=>{const s=Math.hypot(t.body[0].x-a.x,t.body[0].y-a.y);s<e&&(e=s,o=a)}),o}
+    
     startGame();
 </script>
 
