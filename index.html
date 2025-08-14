@@ -3,1093 +3,398 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Jogue Neon Tetris, um jogo clássico com visual neon vibrante e trilha sonora imersiva. Salve sua pontuação e desafie amigos no ranking global!">
-    <meta name="keywords" content="Neon Tetris, jogo de Tetris, jogo online, Tetris grátis, ranking Tetris">
-    <meta property="og:title" content="Neon Tetris - Jogo Online Grátis">
-    <meta property="og:description" content="Desafie suas habilidades com Neon Tetris, um jogo com visual neon e ranking global. Jogue agora!">
-    <meta property="og:image" content="URL_DA_IMAGEM_DO_JOGO">
-    <meta property="og:url" content="URL_DO_SEU_JOGO">
-    <meta name="twitter:card" content="summary_large_image">
-    <title>Neon Tetris</title>
-    <link rel="stylesheet" href="dist/output.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" defer></script>
+    <title>Clone do Snake.io</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        @keyframes neon-pulse {
-            0% { text-shadow: 0 0 5px #fff, 0 0 10px #00f7ff; }
-            50% { text-shadow: 0 0 10px #fff, 0 0 20px #00f7ff; }
-            100% { text-shadow: 0 0 5px #fff, 0 0 10px #00f7ff; }
-        }
-        @keyframes neon-glow {
-            0% { text-shadow: 0 0 3px #00f7ff, 0 0 6px #00f7ff; }
-            50% { text-shadow: 0 0 6px #00f7ff, 0 0 12px #00f7ff; }
-            100% { text-shadow: 0 0 3px #00f7ff, 0 0 6px #00f7ff; }
-        }
-        @keyframes line-clear-flash {
-            0% { opacity: 0.7; }
-            100% { opacity: 0; }
-        }
-        html, body {
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
+            overflow: hidden;
+            touch-action: none; /* Desativa zoom e scroll por toque no corpo */
+        }
+        .game-wrapper {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
-            color: #e0e0e0;
-            font-family: 'Orbitron', sans-serif;
-            touch-action: none;
-        }
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 10px;
         }
-        canvas#tetris-canvas {
-            background-color: #0f0f1a;
-            border: 4px solid #00f7ff;
-            border-radius: 8px;
-            box-sizing: border-box;
-            max-width: 100vw;
-            max-height: 100vh;
-            box-shadow: 0 0 15px rgba(0, 247, 255, 0.5);
-        }
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
-            padding: 20px;
+        .game-container {
+            border: 4px solid #4a4a4a;
             border-radius: 10px;
-            border: 3px solid #ff00ff;
-            text-align: center;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
-        }
-        .modal-content h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #fff;
-            animation: neon-pulse 2s infinite;
-            will-change: text-shadow;
-        }
-        .modal-content p {
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .modal-content button {
-            background-color: #00f7ff;
-            color: #1a1a2e;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            margin: 5px;
-        }
-        .modal-content button:hover {
-            background-color: #00ccff;
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
-        }
-        .modal-content button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        #score-popup {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 0, 255, 0.85);
-            color: #1a1a2e;
-            padding: 10px 25px;
-            border-radius: 20px;
-            font-size: clamp(1rem, 3vw, 1.2rem);
-            z-index: 10;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            max-width: 90vw;
-            text-align: center;
-        }
-        #score-popup.show {
-            opacity: 1;
-        }
-        #score-popup.record-beaten {
-            background-color: rgba(37, 211, 102, 0.85);
-            color: #fff;
-            font-size: clamp(1rem, 3vw, 1.1rem);
-            padding: 15px 30px;
-        }
-        #game-info {
-            position: absolute;
-            top: 60px;
-            right: 10px;
-            color: #00f7ff;
-            font-size: 1rem;
-            text-align: right;
-            z-index: 10;
-            text-shadow: 0 0 5px rgba(0, 247, 255, 0.7);
-        }
-        #high-scores-container {
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-            background-color: rgba(0,0,0,0.3);
-            border-radius: 5px;
+            box-shadow: 0 0 25px rgba(0, 255, 127, 0.5);
+            background-color: #1a1a1a;
             padding: 10px;
+            width: 100%;
+            max-width: 640px; /* Limite para ecrãs grandes */
+            display: flex;
+            flex-direction: column;
         }
-        #high-scores-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            text-align: left;
-        }
-        #high-scores-list li {
-            padding: 5px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        #high-scores-list li:last-child {
-            border-bottom: none;
-        }
-        #high-scores-list li .rank {
-            display: inline-block;
-            width: 30px;
-            font-weight: bold;
-            color: #00f7ff;
-        }
-        #high-scores-list li .name {
-            font-weight: bold;
-        }
-        #high-scores-list li .score {
-            float: right;
-        }
-        #player-name-input {
-            background-color: #0f0f1a;
-            border: 2px solid #00f7ff;
-            color: #e0e0e0;
-            padding: 8px;
+        canvas {
+            background-color: #000000;
+            border: 2px solid #33ff33;
             border-radius: 5px;
-            text-align: center;
-            font-family: 'Orbitron', sans-serif;
-            margin-bottom: 10px;
+            width: 100%; /* Canvas preenche o container */
+            height: auto;
+            aspect-ratio: 1 / 1; /* Mantém o canvas quadrado */
         }
-        #mute-button {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(0, 247, 255, 0.4);
-            border-radius: 50%;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
+        .ui-panel {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            cursor: pointer;
-            z-index: 50;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        #mute-button:hover {
-            background-color: rgba(0, 247, 255, 0.7);
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
-        }
-        #pause-button {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(0, 247, 255, 0.4);
-            border-radius: 50%;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 50;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        #pause-button:hover {
-            background-color: rgba(0, 247, 255, 0.7);
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
-        }
-        #whatsapp-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #e0e0e0;
-            background: linear-gradient(145deg, rgba(15, 15, 26, 0.5), rgba(74, 78, 105, 0.5));
-            border: 1px solid #00f7ff;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-size: 0.9rem;
-        }
-        #whatsapp-link:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(37, 211, 102, 0.5);
-        }
-        #whatsapp-link .whatsapp-icon {
-            width: 24px;
-            height: 24px;
-            transition: transform 0.2s;
-        }
-        #whatsapp-link:hover .whatsapp-icon {
-            transform: scale(1.1);
-        }
-        #next-piece-container {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(15, 15, 26, 0.5);
-            border: 2px solid #00f7ff;
-            border-radius: 8px;
-            padding: 5px;
-            z-index: 50;
-            transform: scale(0.8);
-        }
-        #next-piece-canvas {
-            display: block;
-        }
-        #fullscreen-button {
-            position: absolute;
-            top: 15px;
-            right: 60px;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(0, 247, 255, 0.4);
-            border-radius: 50%;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 50;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        #fullscreen-button:hover {
-            background-color: rgba(0, 247, 255, 0.7);
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
-        }
-        #pause-content h2 {
-            font-size: 2rem;
-            color: #fff;
-            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00f7ff;
-            margin-bottom: 1rem;
-        }
-        #pause-content p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-        #pause-content button {
-            background-color: #00f7ff;
-            color: #1a1a2e;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            margin: 5px;
-        }
-        #pause-content button:hover {
-            background-color: #00ccff;
-            box-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
-        }
-        .dev-signature {
+            margin-top: 10px;
             font-size: 0.8rem;
-            margin-top: 15px;
-            color: #00f7ff;
-            animation: neon-glow 2s infinite;
-            will-change: text-shadow;
         }
-        .sr-only {
+        .message-box {
             position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #33ff33;
+            text-align: center;
+            font-size: 1.2rem;
+            z-index: 100;
+            width: 80%;
+            max-width: 400px;
+        }
+        /* NOVIDADE: Estilos para os controlos de toque */
+        #mobile-controls {
+            width: 100%;
+            margin-top: 15px;
+        }
+        #mobile-controls button {
+            background-color: rgba(55, 65, 81, 0.7);
+            border: 2px solid #4a4a4a;
+            color: white;
+            font-size: 2rem;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            user-select: none; /* Evita seleção de texto ao tocar */
+            -webkit-user-select: none;
         }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="tetris-canvas"></canvas>
-        <div id="score-popup"><span id="score">0</span></div>
-        <div id="game-info">
-            <p>Pontuação: <span id="game-score">0</span></p>
-            <p>Linhas: <span id="game-lines">0</span></p>
-            <p>Nível: <span id="game-level">1</span></p>
+
+<div class="game-wrapper">
+    <div class="game-container">
+        <h1 class="text-xl md:text-3xl text-center mb-2 text-[#33ff33]">SNAKE BATTLE</h1>
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-panel">
+            <div>PONTOS: <span id="score">0</span></div>
+            <div>VIVOS: <span id="snakes-alive">1</span></div>
         </div>
-        <div id="mute-button" aria-label="Alternar som">🔊</div>
-        <div id="pause-button" aria-label="Pausar jogo">⏸</div>
-        <div id="next-piece-container">
-            <canvas id="next-piece-canvas"></canvas>
+        <div class="controls text-xs text-center mt-2 text-gray-400 hidden md:block">
+            Use as SETAS ◀ e ▶ para virar
         </div>
-        <button id="fullscreen-button" aria-label="Alternar tela cheia">⛶</button>
-    </div>
-    <section class="sr-only">
-        <h2>Neon Tetris - Jogo Online</h2>
-        <p>Neon Tetris é uma versão moderna do clássico jogo de Tetris, com gráficos vibrantes em estilo neon e uma trilha sonora imersiva. Desafie suas habilidades, acumule pontos e salve sua pontuação no ranking global. Disponível para jogar no PC e celular!</p>
-    </section>
-    <div id="modal-overlay" class="overlay" role="dialog" aria-modal="true">
-        <div class="modal-content">
-            <h1 id="modal-title">NEON TETRIS</h1>
-            <p id="modal-text">Controles: Setas (PC) ou Toque/Arraste (Celular). Arraste para mover, toque para girar, segure para descer, deslize para baixo para descida rápida.</p>
-            <div id="game-over-content" class="hidden">
-                <label for="player-name-input" class="sr-only">Digite seu nome</label>
-                <input type="text" id="player-name-input" placeholder="Digite seu nome" maxlength="10">
-                <button id="save-score-button">Salvar Recorde</button>
-            </div>
-            <div id="pause-content" class="hidden">
-                <h2>JOGO PAUSADO</h2>
-                <p>Pontuação: <span id="pause-score">0</span> | Nível: <span id="pause-level">1</span></p>
-                <button id="resume-button">Continuar</button>
-                <button id="restart-button">Reiniciar</button>
-                <button id="menu-button">Voltar ao Menu</button>
-            </div>
-            <div>
-                <button id="start-button" disabled>Conectando...</button>
-                <button id="scores-button">Recordes</button>
-            </div>
-            <div id="high-scores-container" class="hidden">
-                <ul id="high-scores-list"></ul>
-            </div>
-            <a href="https://chat.whatsapp.com/BQVgfNFY7Cl3QLkZeV3Kau?mode=ems_copy_t" target="_blank" id="whatsapp-link" aria-label="Entrar no grupo do WhatsApp para atualizações do jogo">
-                <span>Para receber atualizações sobre o jogo, entre no grupo!</span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="whatsapp-icon">
-                    <path fill="#25D366" d="M24,4C12.954,4,4,12.954,4,24c0,3.375,0.837,6.652,2.423,9.586L4,44l10.737-2.814 c2.606,1.418,5.511,2.232,8.604,2.232C35.046,43.418,44,34.464,44,24S35.046,4.582,24,4.582V4z"/>
-                    <path fill="#FFFFFF" d="M34.918,32.332c-0.509,1.428-2.975,2.668-4.396,2.986c-2.135,0.477-4.296,0.821-7.537-0.528 c-4.25-1.771-7.816-4.715-10.404-8.057c-1.934-2.498-3.054-5.351-2.894-8.346c0.068-1.271,0.609-2.686,1.617-3.58 c0.678-0.6,1.573-0.951,2.49-0.951c0.303,0,0.604,0.03,0.901,0.09c0.963,0.193,1.703,1.047,2.009,2.008 c0.428,1.346,0.839,2.701,1.215,4.061c0.188,0.678,0.105,1.5-0.225,2.121c-0.27,0.509-0.601,0.951-1.008,1.35 c-0.375,0.369-0.795,0.779-0.885,1.305c-0.104,0.609,0.195,1.35,0.705,1.83c1.396,1.313,3.021,2.371,4.732,3.225 c0.885,0.441,1.83,0.672,2.76,0.396c0.525-0.156,0.975-0.555,1.35-0.924c0.795-0.789,1.77-1.74,2.805-1.74 c0.375,0,0.75,0.105,1.05,0.315c1.365,0.951,2.715,1.932,3.825,3.045C35.797,30.602,35.428,31.402,34.918,32.332z"/>
-                </svg>
-            </a>
-            <p class="dev-signature">Dev. YoriDPA</p>
+        <!-- NOVIDADE: Botões para telemóvel -->
+        <div id="mobile-controls" class="flex justify-between md:hidden">
+            <button id="left-btn">◀</button>
+            <button id="right-btn">▶</button>
         </div>
     </div>
+</div>
 
-    <script type="module">
-        // Importações do Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        window.addEventListener('load', () => {
-            // --- Variáveis Globais e Configuração ---
-            const canvas = document.getElementById('tetris-canvas');
-            const ctx = canvas.getContext('2d');
-            const nextPieceCanvas = document.getElementById('next-piece-canvas');
-            const nextPieceCtx = nextPieceCanvas.getContext('2d');
-            const gameContainer = document.getElementById('game-container');
-            const modalOverlay = document.getElementById('modal-overlay');
-            const modalTitle = document.getElementById('modal-title');
-            const modalText = document.getElementById('modal-text');
-            const startButton = document.getElementById('start-button');
-            const scoresButton = document.getElementById('scores-button');
-            const highScoresContainer = document.getElementById('high-scores-container');
-            const highScoresList = document.getElementById('high-scores-list');
-            const scorePopup = document.getElementById('score-popup');
-            const scoreEl = document.getElementById('score');
-            const gameScoreEl = document.getElementById('game-score');
-            const gameLinesEl = document.getElementById('game-lines');
-            const gameLevelEl = document.getElementById('game-level');
-            const gameOverContent = document.getElementById('game-over-content');
-            const playerNameInput = document.getElementById('player-name-input');
-            const saveScoreButton = document.getElementById('save-score-button');
-            const muteButton = document.getElementById('mute-button');
-            const pauseContent = document.getElementById('pause-content');
-            const pauseScoreEl = document.getElementById('pause-score');
-            const pauseLevelEl = document.getElementById('pause-level');
-            const resumeButton = document.getElementById('resume-button');
-            const restartButton = document.getElementById('restart-button');
-            const menuButton = document.getElementById('menu-button');
+<div id="gameOverMessage" class="message-box" style="display: none;">
+    <div>Fim de Jogo!</div>
+    <div id="finalScore" class="text-lg mt-2"></div>
+    <button id="restartButton">Jogar Novamente</button>
+</div>
 
-            const COLS = 10;
-            const ROWS = 20;
-            let blockSize;
-            let board = [];
-            let touchFeedbackTimeout;
 
-            const COLORS = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877F5'];
-            const SHAPES = [
-                [], [[1, 1, 1, 1]], [[2, 2], [2, 2]], [[0, 3, 0], [3, 3, 3]],
-                [[4, 4, 0], [0, 4, 4]], [[0, 5, 5], [5, 5, 0]], [[6, 0, 0], [6, 6, 6]],
-                [[0, 0, 7], [7, 7, 7]]
-            ];
+<script>
+    // --- Configurações do Jogo ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const snakesAliveElement = document.getElementById('snakes-alive');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+    const finalScoreElement = document.getElementById('finalScore');
+    const restartButton = document.getElementById('restartButton');
+    const leftBtn = document.getElementById('left-btn');
+    const rightBtn = document.getElementById('right-btn');
 
-            let player, nextPiece, score, lines, level, dropCounter, dropInterval, lastTime;
-            let isGameOver = true;
-            let isPaused = false;
-            let pauseCountdown = 0;
-            let animationFrameId, scoreTimeout, lineClearTimeout, recordBeatenTimeout;
+    const NUM_BOTS = 15;
+    const NUM_PELLETS = 250;
+    const WORLD_WIDTH = 2500;
+    const WORLD_HEIGHT = 2500;
 
-            let audioInitialized = false;
-            let musicSynth, scoreSynth, musicLoop;
+    // --- Estado do Jogo ---
+    let player, bots, pellets;
+    let gameInterval, isGameOver;
+    let camera = { x: 0, y: 0 };
+    let keys = { ArrowLeft: false, ArrowRight: false };
 
-            let db, auth;
-            const persistentAppId = 'tetris-yoridpa-global';
+    // --- Funções Principais ---
+    function createSnake(x, y, color) {
+        return {
+            body: [{ x, y }],
+            angle: Math.random() * 2 * Math.PI,
+            speed: 1.8,
+            turnSpeed: 0.05,
+            radius: 7,
+            color: color,
+            score: 0,
+            targetPellet: null
+        };
+    }
 
-            let isSoftDrop = false;
-            let softDropTimeout;
-            let isHolding = false;
+    function startGame() {
+        resizeCanvas();
+        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00');
+        bots = [];
+        const botColors = ['#ff00ff', '#00ffff', '#ffff00', '#ff8800', '#ff0088', '#8800ff', '#ffffff'];
+        for (let i = 0; i < NUM_BOTS; i++) {
+            bots.push(createSnake(
+                Math.random() * WORLD_WIDTH,
+                Math.random() * WORLD_HEIGHT,
+                botColors[i % botColors.length]
+            ));
+        }
+        pellets = [];
+        for (let i = 0; i < NUM_PELLETS; i++) {
+            spawnPellet();
+        }
+        isGameOver = false;
+        keys.ArrowLeft = false;
+        keys.ArrowRight = false;
+        updateUI();
+        gameOverMessage.style.display = 'none';
+        if (gameInterval) clearInterval(gameInterval);
+        gameInterval = setInterval(gameLoop, 1000 / 60);
+    }
+    
+    function resizeCanvas() {
+        const size = canvas.clientWidth;
+        canvas.width = size;
+        canvas.height = size;
+    }
 
-            async function initFirebase() {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyAHKPetYO0_GKKa6zn7hA77HobsJu_8pUg",
-                    authDomain: "yoridpa-tetris.firebaseapp.com",
-                    projectId: "yoridpa-tetris",
-                    storageBucket: "yoridpa-tetris.appspot.com",
-                    messagingSenderId: "1067967404196",
-                    appId: "1:1067967404196:web:0f56aa3ed0d4f239faae31",
-                    measurementId: "G-SMCMQNN97R"
-                };
+    function gameLoop() {
+        if (isGameOver) return;
+        updatePlayer();
+        updateBots();
+        updateCamera();
+        checkCollisions();
+        drawGame();
+        updateUI();
+    }
 
-                try {
-                    const app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
-
-                    onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            console.log("Usuário autenticado:", user.uid);
-                            startButton.disabled = false;
-                            startButton.innerText = "Iniciar Jogo";
-                        }
-                    });
-
-                    await signInAnonymously(auth);
-                } catch (error) {
-                    console.error("Erro ao inicializar o Firebase:", error);
-                    startButton.disabled = false;
-                    startButton.innerText = "Jogar Offline";
-                    modalText.innerHTML = `<p>Não foi possível conectar ao ranking online. Você pode jogar offline!</p>`;
-                    startButton.addEventListener('click', startGame);
-                }
-            }
-
-            function createBoard() { return Array.from({ length: ROWS }, () => Array(COLS).fill(0)); }
-            function createPiece(type) { return { x: 0, y: 0, matrix: SHAPES[type], type: type }; }
-            function resetPlayer() {
-                if (!nextPiece) {
-                    player = createPiece(Math.floor(Math.random() * 7) + 1);
-                    nextPiece = createPiece(Math.floor(Math.random() * 7) + 1);
-                } else {
-                    player = nextPiece;
-                    nextPiece = createPiece(Math.floor(Math.random() * 7) + 1);
-                }
-                player.x = Math.floor(COLS / 2) - Math.floor(player.matrix[0].length / 2);
-                player.y = 0;
-                drawNextPiece();
-                if (checkCollision(board, player)) gameOver();
-            }
-            function draw() {
-                if (!ctx) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawMatrix(board, { x: 0, y: 0 });
-                if (player) drawMatrix(player.matrix, { x: player.x, y: player.y });
-            }
-            function drawMatrix(matrix, offset) {
-                matrix.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            ctx.fillStyle = COLORS[value];
-                            ctx.fillRect((offset.x + x) * blockSize, (offset.y + y) * blockSize, blockSize, blockSize);
-                            ctx.strokeStyle = '#0f0f1a';
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect((offset.x + x) * blockSize, (offset.y + y) * blockSize, blockSize, blockSize);
-                        }
-                    });
-                });
-            }
-            function drawNextPiece() {
-                const scale = 15;
-                nextPieceCanvas.width = 4 * scale;
-                nextPieceCanvas.height = 4 * scale;
-                nextPieceCtx.clearRect(0, 0, nextPieceCanvas.width, nextPieceCanvas.height);
-                
-                const piece = nextPiece.matrix;
-                const offsetX = (nextPieceCanvas.width - piece[0].length * scale) / 2;
-                const offsetY = (nextPieceCanvas.height - piece.length * scale) / 2;
-
-                piece.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            nextPieceCtx.fillStyle = COLORS[value];
-                            nextPieceCtx.fillRect(offsetX + x * scale, offsetY + y * scale, scale, scale);
-                            nextPieceCtx.strokeStyle = '#0f0f1a';
-                            nextPieceCtx.lineWidth = 1;
-                            nextPieceCtx.strokeRect(offsetX + x * scale, offsetY + y * scale, scale, scale);
-                        }
-                    });
-                });
-            }
-            function drawPauseCountdown(countdownValue) {
-                ctx.save();
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#00f7ff';
-                ctx.font = `${blockSize * 2}px 'Orbitron', sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(countdownValue.toString(), canvas.width / 2, canvas.height / 2);
-                ctx.restore();
-            }
-            function drawLineClearEffect(clearedLines) {
-                ctx.save();
-                ctx.fillStyle = 'rgba(0, 247, 255, 0.7)';
-                clearedLines.forEach(y => {
-                    ctx.fillRect(0, y * blockSize, canvas.width, blockSize);
-                });
-                ctx.globalAlpha = 0.7;
-                ctx.animation = 'line-clear-flash 0.5s forwards';
-                ctx.restore();
-                lineClearTimeout = setTimeout(() => {
-                    draw();
-                }, 500);
-            }
-            function drawTouchFeedback() {
-                ctx.save();
-                ctx.strokeStyle = '#00f7ff';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(0, 0, canvas.width, canvas.height);
-                ctx.restore();
-                clearTimeout(touchFeedbackTimeout);
-                touchFeedbackTimeout = setTimeout(() => {
-                    draw();
-                }, 100);
-            }
-            function merge(board, player) {
-                player.matrix.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) board[y + player.y][x + player.x] = value;
-                    });
-                });
-            }
-            function checkCollision(board, player) {
-                if (!player) return false;
-                for (let y = 0; y < player.matrix.length; y++) {
-                    for (let x = 0; x < player.matrix[y].length; x++) {
-                        if (player.matrix[y][x] !== 0 && (board[y + player.y] && board[y + player.y][x + player.x]) !== 0) return true;
-                    }
-                }
-                return false;
-            }
-            function rotate(matrix) {
-                const newMatrix = matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
-                return newMatrix.map(row => row.reverse());
-            }
-            function playerRotate() {
-                if (!player) return;
-                const pos = player.x;
-                let offset = 1;
-                player.matrix = rotate(player.matrix);
-                while (checkCollision(board, player)) {
-                    player.x += offset;
-                    offset = -(offset + (offset > 0 ? 1 : -1));
-                    if (offset > player.matrix[0].length) {
-                        player.matrix = rotate(rotate(rotate(player.matrix)));
-                        player.x = pos;
-                        return;
-                    }
-                }
-            }
-            function playerMove(dir) {
-                if (!player) return;
-                player.x += dir;
-                if (checkCollision(board, player)) player.x -= dir;
-            }
-            function playerDrop() {
-                if (!player) return;
-                player.y++;
-                if (checkCollision(board, player)) {
-                    player.y--;
-                    merge(board, player);
-                    sweepLines();
-                    resetPlayer();
-                }
-            }
-            function playerHardDrop() {
-                if (!player) return;
-                while (!checkCollision(board, player)) player.y++;
-                player.y--;
-                merge(board, player);
-                sweepLines();
-                resetPlayer();
-                dropCounter = 0;
-            }
-            function sweepLines() {
-                let clearedLines = 0;
-                let clearedLineIndices = [];
-                outer: for (let y = board.length - 1; y > 0; --y) {
-                    for (let x = 0; x < board[y].length; ++x) {
-                        if (board[y][x] === 0) continue outer;
-                    }
-                    clearedLineIndices.push(y);
-                    board.splice(y, 1);
-                    board.unshift(Array(COLS).fill(0));
-                    y++;
-                    clearedLines++;
-                }
-                if (clearedLines > 0) {
-                    if (scoreSynth) {
-                        scoreSynth.triggerAttackRelease("C5", "8n");
-                        scoreSynth.triggerAttackRelease("F5", "8n", "+0.1");
-                    }
-                    drawLineClearEffect(clearedLineIndices);
-                    lines += clearedLines;
-                    score += [0, 100, 300, 500, 800][clearedLines] * level;
-                    scoreEl.textContent = score;
-                    gameScoreEl.textContent = score;
-                    gameLinesEl.textContent = lines;
-                    gameLevelEl.textContent = level;
-                    scorePopup.classList.add('show');
-                    if (scoreTimeout) clearTimeout(scoreTimeout);
-                    scoreTimeout = setTimeout(() => scorePopup.classList.remove('show'), 1500);
-                    if (Math.floor(lines / 10) + 1 > level) {
-                        level = Math.floor(lines / 10) + 1;
-                        dropInterval = Math.max(150, 1000 - (level * 50));
-                        gameLevelEl.textContent = level;
-                    }
-                }
-            }
-            function update(time = 0) {
-                if (isGameOver || isPaused) {
-                    if (pauseCountdown > 0) {
-                        const countdownValue = Math.ceil(pauseCountdown / 1000);
-                        drawPauseCountdown(countdownValue);
-                        pauseCountdown -= time - lastTime;
-                        if (pauseCountdown <= 0) {
-                            isPaused = false;
-                            if (musicLoop && !Tone.Destination.mute) Tone.Transport.start();
-                        }
-                    }
-                    lastTime = time;
-                    return;
-                }
-                if (!lastTime) lastTime = time;
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                dropCounter += deltaTime * (isSoftDrop ? 15 : 1);
-                if (dropCounter > dropInterval) {
-                    playerDrop();
-                    dropCounter -= dropInterval;
-                }
-                draw();
-                animationFrameId = requestAnimationFrame(update);
-            }
-            function togglePause() {
-                if (isGameOver) return;
-                isPaused = !isPaused;
-                if (isPaused) {
-                    cancelAnimationFrame(animationFrameId);
-                    if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
-                        Tone.Transport.pause();
-                    }
-                    modalOverlay.style.display = 'flex';
-                    modalTitle.style.display = 'none';
-                    modalText.style.display = 'none';
-                    startButton.style.display = 'none';
-                    scoresButton.style.display = 'none';
-                    gameOverContent.classList.add('hidden');
-                    highScoresContainer.classList.add('hidden');
-                    pauseContent.classList.remove('hidden');
-                    pauseScoreEl.textContent = score;
-                    pauseLevelEl.textContent = level;
-                    if (scoreSynth && !Tone.Destination.mute) {
-                        scoreSynth.triggerAttackRelease("A4", "8n");
-                    }
-                } else {
-                    pauseCountdown = 3000;
-                    modalOverlay.style.display = 'none';
-                    pauseContent.classList.add('hidden');
-                    if (scoreSynth && !Tone.Destination.mute) {
-                        scoreSynth.triggerAttackRelease("E5", "8n");
-                    }
-                    animationFrameId = requestAnimationFrame(update);
-                }
-            }
-            function toggleFullscreen() {
-                if (!document.fullscreenElement) {
-                    gameContainer.requestFullscreen().catch(err => {
-                        console.error("Erro ao entrar em modo fullscreen:", err);
-                    });
-                } else {
-                    document.exitFullscreen();
-                }
-            }
-            function handleResize() {
-                const windowWidth = window.innerWidth;
-                const windowHeight = window.innerHeight;
-                const aspectRatio = COLS / ROWS;
-                let canvasWidth, canvasHeight;
-
-                if (windowWidth / windowHeight > aspectRatio) {
-                    canvasHeight = windowHeight;
-                    canvasWidth = canvasHeight * aspectRatio;
-                } else {
-                    canvasWidth = windowWidth;
-                    canvasHeight = canvasWidth / aspectRatio;
-                }
-
-                blockSize = Math.floor(canvasWidth / COLS);
-                canvas.width = COLS * blockSize;
-                canvas.height = ROWS * blockSize;
-
-                canvas.style.width = `${canvasWidth}px`;
-                canvas.style.height = `${canvasHeight}px`;
-
-                nextPieceCanvas.width = 4 * 15;
-                nextPieceCanvas.height = 4 * 15;
-
-                if (!isGameOver) draw();
-            }
-            
-            function initAudio() {
-                if (audioInitialized || typeof window.Tone === 'undefined') return;
-                musicSynth = new Tone.Synth({
-                    oscillator: { type: 'fmsquare' },
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 }
-                }).toDestination();
-                
-                scoreSynth = new Tone.Synth({
-                    oscillator: { type: 'triangle8' },
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 }
-                }).toDestination();
-
-                musicLoop = new Tone.Sequence((time, note) => {
-                    if (musicSynth) musicSynth.triggerAttackRelease(note, '8n', time);
-                }, ['C2', ['E2', 'G2'], 'A2', 'G2'], '4n');
-                
-                Tone.Transport.bpm.value = 120;
-                audioInitialized = true;
-            }
-
-            async function startGame() {
-                try {
-                    if (typeof Tone !== 'undefined' && !audioInitialized) {
-                        await Tone.start();
-                        initAudio();
-                    }
-                    if (Tone && Tone.Transport.state !== 'started') {
-                        Tone.Transport.start();
-                    }
-                    if (musicLoop) musicLoop.start(0);
-                } catch (e) {
-                    console.error("Falha ao iniciar o áudio:", e);
-                }
-
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                isGameOver = false;
-                isPaused = false;
-                pauseCountdown = 0;
-                board = createBoard();
-                score = 0; lines = 0; level = 1;
-                dropInterval = 1000; dropCounter = 0; lastTime = 0;
-                player = null; nextPiece = null;
-                scorePopup.classList.remove('show');
-                if (scoreTimeout) clearTimeout(scoreTimeout);
-                gameScoreEl.textContent = score;
-                gameLinesEl.textContent = lines;
-                gameLevelEl.textContent = level;
-                handleResize();
-                resetPlayer();
-                modalOverlay.style.display = 'none';
-                if (!document.fullscreenElement) {
-                    gameContainer.requestFullscreen().catch(err => {
-                        console.error("Erro ao entrar em modo fullscreen:", err);
-                    });
-                }
-                update();
-            }
-
-            async function gameOver() {
-                isGameOver = true;
-                if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
-                    Tone.Transport.stop();
-                }
-                if (musicLoop) musicLoop.stop();
-                cancelAnimationFrame(animationFrameId);
-                
-                modalTitle.innerText = "FIM DE JOGO";
-                modalText.innerText = `Sua pontuação final: ${score}`;
-                startButton.innerText = "Jogar Novamente";
-                highScoresContainer.classList.add('hidden');
-                
-                try {
-                    if (score > 0 && auth && auth.currentUser) {
-                        await handlePlayerRecord();
-                    } else {
-                        gameOverContent.classList.add('hidden');
-                        if (score > 0) {
-                            console.error("Autenticação não pronta, não é possível salvar o recorde.");
-                            modalText.innerText += "\n(Falha na conexão para salvar o recorde)";
-                        }
-                    }
-                } catch (error) {
-                    console.error("Erro ao processar recorde:", error);
-                    gameOverContent.classList.add('hidden');
-                    modalText.innerText += "\n(Não foi possível salvar o recorde)";
-                } finally {
-                    modalOverlay.style.display = 'flex';
-                }
-            }
-
-            async function handlePlayerRecord() {
-                if (!auth.currentUser) return;
-                const userId = auth.currentUser.uid;
-                const userDocRef = doc(db, `/artifacts/${persistentAppId}/users/${userId}`);
-                const userDocSnap = await getDoc(userDocRef);
-
-                if (userDocSnap.exists() && userDocSnap.data().name) {
-                    const playerName = userDocSnap.data().name;
-                    gameOverContent.classList.add('hidden');
-                    await updatePlayerBestScore(userId, playerName, score);
-                } else {
-                    gameOverContent.classList.remove('hidden');
-                    playerNameInput.value = '';
-                    saveScoreButton.disabled = false;
-                    saveScoreButton.innerText = "Salvar Recorde";
-                }
-            }
-            
-            async function findBeatenRecord(newScore) {
-                if (!db) return null;
-                try {
-                    const scoresCollection = collection(db, `/artifacts/${persistentAppId}/public/data/tetris_highscores`);
-                    const q = query(scoresCollection, orderBy("score", "desc"), limit(10));
-                    const querySnapshot = await getDocs(q);
-                    
-                    let beatenRecord = null;
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        if (data.score < newScore && data.score > 0 && !beatenRecord) {
-                            beatenRecord = { name: data.name, score: data.score };
-                        }
-                    });
-                    return beatenRecord;
-                } catch (e) {
-                    console.error("Erro ao buscar recordes superados:", e);
-                    return null;
-                }
-            }
-
-            async function updatePlayerBestScore(userId, name, newScore) {
-                if (!db) return;
-                const scoreDocRef = doc(db, `/artifacts/${persistentAppId}/public/data/tetris_highscores/${userId}`);
-                const scoreDocSnap = await getDoc(scoreDocRef);
-
-                const beatenRecord = await findBeatenRecord(newScore);
-                if (beatenRecord) {
-                    scorePopup.classList.remove('show');
-                    if (recordBeatenTimeout) clearTimeout(recordBeatenTimeout);
-                    scoreEl.textContent = `Você superou o recorde de ${beatenRecord.name}!`;
-                    scorePopup.classList.add('record-beaten');
-                    scorePopup.classList.add('show');
-                    if (scoreSynth && !Tone.Destination.mute) {
-                        scoreSynth.triggerAttackRelease("G5", "8n");
-                    }
-                    recordBeatenTimeout = setTimeout(() => {
-                        scorePopup.classList.remove('show');
-                        scorePopup.classList.remove('record-beaten');
-                        scoreEl.textContent = score;
-                    }, 3000);
-                }
-
-                if (scoreDocSnap.exists()) {
-                    const oldScore = scoreDocSnap.data().score;
-                    if (newScore > oldScore) {
-                        await setDoc(scoreDocRef, { name, score: newScore, createdAt: new Date() });
-                    }
-                } else {
-                    await setDoc(scoreDocRef, { name, score: newScore, createdAt: new Date() });
-                }
-            }
-
-            async function displayHighScores() {
-                if (!db) return;
-                highScoresList.innerHTML = '<li>Carregando...</li>';
-                
-                try {
-                    const scoresCollection = collection(db, `/artifacts/${persistentAppId}/public/data/tetris_highscores`);
-                    const q = query(scoresCollection, orderBy("score", "desc"), limit(10));
-                    const querySnapshot = await getDocs(q);
-                    
-                    let scores = [];
-                    querySnapshot.forEach((doc) => {
-                        scores.push(doc.data());
-                    });
-                    
-                    highScoresList.innerHTML = '';
-
-                    if (scores.length === 0) {
-                        highScoresList.innerHTML = '<li>Nenhum recorde ainda.</li>';
-                    } else {
-                        scores.forEach((scoreData, index) => {
-                            const li = document.createElement('li');
-                            li.innerHTML = `<span class="rank">#${index + 1}</span> <span class="name">${scoreData.name}</span> <span class="score">${scoreData.score}</span>`;
-                            highScoresList.appendChild(li);
-                        });
-                    }
-                } catch (e) {
-                    console.error("Erro ao buscar recordes: ", e);
-                    highScoresList.innerHTML = '<li>Erro ao carregar recordes.</li>';
-                }
-            }
-
-            document.addEventListener('keydown', event => {
-                if (isGameOver) return;
-                if (event.key === 'ArrowLeft') playerMove(-1);
-                else if (event.key === 'ArrowRight') playerMove(1);
-                else if (event.key === 'ArrowDown') {
-                    isSoftDrop = true;
-                    playerDrop();
-                }
-                else if (event.key === 'ArrowUp') playerRotate();
-                else if (event.code === 'Space') playerHardDrop();
-                else if (event.key.toLowerCase() === 'p') togglePause();
-            });
-
-            document.addEventListener('keyup', event => {
-                if (isGameOver) return;
-                if (event.key === 'ArrowDown') isSoftDrop = false;
-            });
-            
-            let touchStartX, touchStartY, isDragging;
-            document.addEventListener('touchstart', e => {
-                if (isGameOver) return;
-                e.preventDefault();
-                isDragging = false;
-                isHolding = false;
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                drawTouchFeedback();
-                softDropTimeout = setTimeout(() => {
-                    isSoftDrop = true;
-                    isHolding = true;
-                }, 300);
-            }, { passive: false });
-
-            document.addEventListener('touchmove', e => {
-                if (isGameOver) return;
-                e.preventDefault();
-                const dx = e.touches[0].clientX - touchStartX;
-                const dy = e.touches[0].clientY - touchStartY;
-                if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
-                    isDragging = true;
-                    clearTimeout(softDropTimeout);
-                }
-                if (Math.abs(dx) > blockSize) {
-                    playerMove(dx > 0 ? 1 : -1);
-                    touchStartX = e.touches[0].clientX;
-                    touchStartY = e.touches[0].clientY;
-                    drawTouchFeedback();
-                }
-            }, { passive: false });
-            
-            document.addEventListener('touchend', e => {
-                if (isGameOver) return;
-                clearTimeout(softDropTimeout);
-                isSoftDrop = false;
-                if (!isDragging && !isHolding) {
-                    playerRotate();
-                }
-                if (isDragging) {
-                    const dy = e.changedTouches[0].clientY - touchStartY;
-                    const dx = e.changedTouches[0].clientX - touchStartX;
-                    if (dy > Math.abs(dx) && dy > 50) playerHardDrop();
-                }
-                isHolding = false;
-            });
-
-            window.addEventListener('resize', handleResize);
-            startButton.addEventListener('click', startGame);
-            scoresButton.addEventListener('click', () => {
-                displayHighScores();
-                highScoresContainer.classList.toggle('hidden');
-            });
-            saveScoreButton.addEventListener('click', async () => {
-                const name = playerNameInput.value.trim();
-                if (name && auth.currentUser) {
-                    saveScoreButton.disabled = true;
-                    saveScoreButton.innerText = "Salvando...";
-                    const userId = auth.currentUser.uid;
-                    await setDoc(doc(db, `/artifacts/${persistentAppId}/users/${userId}`), { name: name });
-                    await updatePlayerBestScore(userId, name, score);
-                    saveScoreButton.innerText = "Salvo!";
-                } else {
-                    alert("Por favor, digite seu nome.");
-                }
-            });
-            muteButton.addEventListener('click', () => {
-                if (!audioInitialized) return;
-                if (typeof Tone !== 'undefined') {
-                    Tone.Destination.mute = !Tone.Destination.mute;
-                    muteButton.textContent = Tone.Destination.mute ? '🔇' : '🔊';
-                }
-            });
-            const fullscreenButton = document.getElementById('fullscreen-button');
-            if (fullscreenButton) {
-                fullscreenButton.addEventListener('click', toggleFullscreen);
-            }
-            const pauseButton = document.getElementById('pause-button');
-            pauseButton.addEventListener('click', togglePause);
-            resumeButton.addEventListener('click', togglePause);
-            restartButton.addEventListener('click', startGame);
-            menuButton.addEventListener('click', () => {
-                isGameOver = true;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
-                    Tone.Transport.stop();
-                }
-                modalOverlay.style.display = 'flex';
-                modalTitle.style.display = 'block';
-                modalText.style.display = 'block';
-                startButton.style.display = 'inline-block';
-                scoresButton.style.display = 'inline-block';
-                pauseContent.classList.add('hidden');
-                modalTitle.innerText = "NEON TETRIS";
-                modalText.innerText = "Controles: Setas (PC) ou Toque/Arraste (Celular). Arraste para mover, toque para girar, segure para descer, deslize para baixo para descida rápida.";
-            });
-
-            async function main() {
-                await initFirebase();
-                handleResize();
-            }
-            
-            main();
+    function drawGame() {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(-camera.x, -camera.y);
+        drawWorldBackground();
+        pellets.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+            ctx.fill();
         });
-    </script>
+        if (player) drawSnake(player);
+        bots.forEach(drawSnake);
+        ctx.restore();
+    }
+
+    function drawWorldBackground() {
+        ctx.strokeStyle = '#33ff33';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 1;
+        const gridSize = 50;
+        for (let x = 0; x <= WORLD_WIDTH; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, WORLD_HEIGHT);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= WORLD_HEIGHT; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(WORLD_WIDTH, y);
+            ctx.stroke();
+        }
+    }
+
+    function drawSnake(snake) {
+        ctx.fillStyle = snake.color;
+        snake.body.forEach(segment => {
+            ctx.beginPath();
+            ctx.arc(segment.x, segment.y, snake.radius, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+    }
+
+    function updatePlayer() {
+        if (!player) return;
+        if (keys.ArrowLeft) player.angle -= player.turnSpeed;
+        if (keys.ArrowRight) player.angle += player.turnSpeed;
+        moveSnake(player);
+    }
+
+    function updateCamera() {
+        if (!player) return;
+        camera.x = player.body[0].x - canvas.width / 2;
+        camera.y = player.body[0].y - canvas.height / 2;
+        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
+        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
+    }
+
+    // --- CÓDIGO CORRIGIDO E LEGÍVEL ---
+
+    function updateBots() {
+        bots.forEach(bot => {
+            // Lógica simples de IA para encontrar o pellet mais próximo
+            if (!bot.targetPellet || Math.random() < 0.005) {
+                bot.targetPellet = findClosestPellet(bot);
+            }
+            if (bot.targetPellet) {
+                const targetAngle = Math.atan2(bot.targetPellet.y - bot.body[0].y, bot.targetPellet.x - bot.body[0].x);
+                bot.angle += Math.sign(targetAngle - bot.angle) * bot.turnSpeed * 0.5;
+            }
+            moveSnake(bot);
+        });
+    }
+
+    function moveSnake(snake) {
+        const head = snake.body[0];
+        const newHead = {
+            x: head.x + Math.cos(snake.angle) * snake.speed,
+            y: head.y + Math.sin(snake.angle) * snake.speed
+        };
+        snake.body.unshift(newHead);
+        const snakeLength = 15 + snake.score;
+        while (snake.body.length > snakeLength) {
+            snake.body.pop();
+        }
+    }
+
+    function checkCollisions() {
+        const allSnakes = [player, ...bots].filter(s => s);
+
+        for (let i = allSnakes.length - 1; i >= 0; i--) {
+            const currentSnake = allSnakes[i];
+            if (!currentSnake) continue;
+            const head = currentSnake.body[0];
+
+            // 1. Colisão com paredes
+            if (head.x < 0 || head.x > WORLD_WIDTH || head.y < 0 || head.y > WORLD_HEIGHT) {
+                killSnake(currentSnake);
+                continue;
+            }
+
+            // 2. Colisão com pellets
+            for (let j = pellets.length - 1; j >= 0; j--) {
+                const p = pellets[j];
+                if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
+                    currentSnake.score += p.value;
+                    pellets.splice(j, 1);
+                    spawnPellet();
+                }
+            }
+
+            // 3. Colisão da cabeça com outros corpos
+            for (let j = 0; j < allSnakes.length; j++) {
+                if (i === j) continue; // Não colidir consigo mesmo
+                const otherSnake = allSnakes[j];
+                if (!otherSnake) continue;
+
+                for (let k = 1; k < otherSnake.body.length; k++) {
+                    const segment = otherSnake.body[k];
+                    if (Math.hypot(head.x - segment.x, head.y - segment.y) < currentSnake.radius) {
+                        killSnake(currentSnake);
+                        j = allSnakes.length; // Força a saída do loop 'j'
+                        break; // Sai do loop 'k'
+                    }
+                }
+            }
+        }
+    }
+
+    function killSnake(snake) {
+        snake.body.forEach((segment, i) => {
+            if (i % 5 === 0) {
+                spawnPellet(segment.x, segment.y, 5, "#ffffff");
+            }
+        });
+
+        if (snake === player) {
+            endGame();
+            player = null;
+        } else {
+            const botIndex = bots.indexOf(snake);
+            if (botIndex > -1) {
+                bots.splice(botIndex, 1);
+            }
+        }
+    }
+
+    function endGame() {
+        const finalScoreValue = player ? player.score : 0;
+        isGameOver = true;
+        clearInterval(gameInterval);
+        finalScoreElement.textContent = `Pontuação Final: ${finalScoreValue}`;
+        gameOverMessage.style.display = "flex";
+    }
+
+    function spawnPellet(x, y, value = 1, color) {
+        pellets.push({
+            x: x || Math.random() * WORLD_WIDTH,
+            y: y || Math.random() * WORLD_HEIGHT,
+            radius: value > 1 ? 4 : 2,
+            value: value,
+            color: color || `hsl(${Math.random() * 360}, 100%, 50%)`
+        });
+    }
+
+    function findClosestPellet(snake) {
+        let closest = null;
+        let closestDist = Infinity;
+        pellets.forEach(p => {
+            const dist = Math.hypot(snake.body[0].x - p.x, snake.body[0].y - p.y);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = p;
+            }
+        });
+        return closest;
+    }
+
+    function updateUI() {
+        scoreElement.textContent = player ? player.score : 0;
+        snakesAliveElement.textContent = bots.length + (player ? 1 : 0);
+    }
+
+    // --- Controles ---
+    window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('keydown', e => { if (e.key in keys) keys[e.key] = true; });
+    document.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
+    restartButton.addEventListener('click', startGame);
+    leftBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.ArrowLeft = true; });
+    leftBtn.addEventListener('touchend', e => { e.preventDefault(); keys.ArrowLeft = false; });
+    rightBtn.addEventListener('touchstart', e => { e.preventDefault(); keys.ArrowRight = true; });
+    rightBtn.addEventListener('touchend', e => { e.preventDefault(); keys.ArrowRight = false; });
+
+    // --- Inicialização ---
+    startGame();
+</script>
+
 </body>
 </html>
