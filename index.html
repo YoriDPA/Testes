@@ -197,9 +197,9 @@
     // --- Classes e Fábricas ---
     function createSnake(x, y, color, name) {
         return {
-            name: name, body: [{ x, y }], angle: Math.random() * 2 * Math.PI,
-            speed: 1.8, turnSpeed: 0.05, radius: 7, color: color, score: 0,
-            isBoosting: false, attractionRadius: 40, attractionSpeed: 0.3 // <<<< VALOR DA ATRAÇÃO AJUSTADO AQUI
+            name: name, body: [{x, y}], angle: Math.random() * 2 * Math.PI,
+            speed: 1.8, turnSpeed: 0.05, radius: 8, color: color, score: 0,
+            isBoosting: false, attractionRadius: 40, attractionSpeed: 0.3
         };
     }
 
@@ -218,7 +218,7 @@
     // --- Funções Principais do Jogo ---
     function startGame() {
         resizeCanvas();
-        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00', 'Você');
+        player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'hsl(120, 100%, 50%)', 'Você');
         lastPlayerPosition = { ...player.body[0] };
         bots = [];
         const usedNames = [...BOT_NAMES];
@@ -297,20 +297,29 @@
 
     // --- Lógica de Desenho ---
     function drawSnake(snake) {
-        if (snake.body.length < 2) return;
-        ctx.strokeStyle = snake.color;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        if (snake.body.length === 0) return;
 
-        for (let i = 0; i < snake.body.length - 1; i++) {
+        for (let i = snake.body.length - 1; i >= 0; i--) {
             const segment = snake.body[i];
-            const nextSegment = snake.body[i + 1];
-            ctx.lineWidth = snake.radius * 2 * (1 - i / snake.body.length);
-            ctx.beginPath();
-            ctx.moveTo(segment.x, segment.y);
-            ctx.lineTo(nextSegment.x, nextSegment.y);
-            ctx.stroke();
+            const segmentRadius = i === 0 ? snake.radius : snake.radius * 0.9; // Cabeça um pouco maior
+            drawCircle(segment.x, segment.y, segmentRadius, snake.color);
+            const shadowColor = `hsl(${getHue(snake.color)}, 100%, 30%)`;
+            drawCircle(segment.x, segment.y, segmentRadius * 0.8, shadowColor);
         }
+
+        const head = snake.body[0];
+        const eyeRadius = snake.radius * 0.3;
+        const eyeOffset = snake.radius * 0.4;
+        
+        const eye1X = head.x + Math.cos(snake.angle + Math.PI / 2) * eyeOffset;
+        const eye1Y = head.y + Math.sin(snake.angle + Math.PI / 2) * eyeOffset;
+        drawCircle(eye1X, eye1Y, eyeRadius, 'white');
+        drawCircle(eye1X, eye1Y, eyeRadius * 0.5, 'black');
+
+        const eye2X = head.x + Math.cos(snake.angle - Math.PI / 2) * eyeOffset;
+        const eye2Y = head.y + Math.sin(snake.angle - Math.PI / 2) * eyeOffset;
+        drawCircle(eye2X, eye2Y, eyeRadius, 'white');
+        drawCircle(eye2X, eye2Y, eyeRadius * 0.5, 'black');
     }
     
     function drawCircle(x, y, radius, color) {
@@ -381,7 +390,9 @@
             x: head.x + Math.cos(snake.angle) * currentSpeed,
             y: head.y + Math.sin(snake.angle) * currentSpeed
         };
+        
         snake.body.unshift(newHead);
+        
         const snakeLength = 15 + snake.score;
         while (snake.body.length > snakeLength && snake.body.length > 2) {
             snake.body.pop();
@@ -576,6 +587,11 @@
             }
         });
         return closest;
+    }
+
+    function getHue(hslColor) {
+        if (!hslColor.startsWith('hsl')) return 0;
+        return parseFloat(hslColor.substring(hslColor.indexOf('(') + 1, hslColor.indexOf(',')));
     }
     
     // --- Event Listeners ---
