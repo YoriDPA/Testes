@@ -22,30 +22,14 @@
             overflow: hidden;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .game-wrapper {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
         }
         canvas#gameCanvas {
-            background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
-            object-fit: cover;
+            background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
         }
         .ui-element {
             position: absolute;
@@ -82,6 +66,7 @@
         #leaderboard li span:first-child { font-weight: bold; color: #fff; }
         
         .message-box {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -149,35 +134,31 @@
     </style>
 </head>
 <body>
-<div class="game-wrapper">
-    <div class="game-container">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div class="ui-panel ui-element">
-            <div>PONTOS: <span id="score">0</span></div>
-            <div>VIVOS: <span id="snakes-alive">1</span></div>
-        </div>
-
-        <div id="leaderboard" class="ui-element">
-            <h3>Classificação</h3>
-            <ol id="leaderboard-list"></ol>
-        </div>
-
-        <div id="joystick-controls" class="mobile-controls">
-            <div id="joystick-area"><div id="joystick"></div></div>
-        </div>
-        <div id="boost-controls" class="mobile-controls">
-            <button id="boost-btn">⚡</button>
-        </div>
-
-        <div id="orientation-message" class="message-box">Por favor, rode o seu dispositivo para o modo paisagem.</div>
-        <div id="gameOverMessage" class="message-box hidden">
-            <h2>Fim de Jogo!</h2>
-            <p id="finalScore"></p>
-            <button id="restartButton">Jogar Novamente</button>
-        </div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="ui-panel ui-element">
+        <div>PONTOS: <span id="score">0</span></div>
+        <div>VIVOS: <span id="snakes-alive">1</span></div>
     </div>
-</div>
+
+    <div id="leaderboard" class="ui-element">
+        <h3>Classificação</h3>
+        <ol id="leaderboard-list"></ol>
+    </div>
+
+    <div id="joystick-controls" class="mobile-controls">
+        <div id="joystick-area"><div id="joystick"></div></div>
+    </div>
+    <div id="boost-controls" class="mobile-controls">
+        <button id="boost-btn">⚡</button>
+    </div>
+
+    <div id="orientation-message" class="message-box">Por favor, rode o seu dispositivo para o modo paisagem.</div>
+    <div id="gameOverMessage" class="message-box hidden">
+        <h2>Fim de Jogo!</h2>
+        <p id="finalScore"></p>
+        <button id="restartButton">Jogar Novamente</button>
+    </div>
 
 <script>
     // --- Configurações e Elementos do DOM ---
@@ -208,6 +189,7 @@
     let keys = { ArrowLeft: false, ArrowRight: false, Space: false };
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
+    let lastPlayerPosition = null; // Guarda a última posição do jogador
     
     const BOT_NAMES = ["Ghost", "Viper", "Raptor", "Siren", "Jaws", "Spike", "Shadow", "Blaze", "Fury", "Titan", "Reaper", "Worm", "Doom", "Cobra", "Venom"];
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -237,6 +219,7 @@
     function startGame() {
         resizeCanvas();
         player = createSnake(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, '#00ff00', 'Você');
+        lastPlayerPosition = { ...player.body[0] };
         bots = [];
         const usedNames = [...BOT_NAMES];
         for (let i = 0; i < NUM_BOTS; i++) {
@@ -267,19 +250,22 @@
     }
     
     function gameLoop() {
-        if (isGameOver) return;
-        handleInput();
+        // O loop agora continua mesmo depois do fim de jogo para permitir animações
         updateAll();
         drawAll();
     }
 
     function updateAll() {
-        updatePlayer();
-        updateBots();
-        updatePellets();
-        updateParticles();
+        // Apenas atualiza o estado do jogo se não for fim de jogo
+        if (!isGameOver) {
+            handleInput();
+            updatePlayer();
+            updateBots();
+            updatePellets();
+            checkCollisions();
+        }
+        updateParticles(); // Partículas continuam a animar
         updateCamera();
-        checkCollisions();
     }
 
     function drawAll() {
@@ -288,8 +274,10 @@
         ctx.save();
         ctx.translate(window.innerWidth / 2, window.innerHeight / 2);
         ctx.scale(camera.zoom, camera.zoom);
-        if(player) {
-            ctx.translate(-player.body[0].x, -player.body[0].y);
+        
+        const focusPoint = player ? player.body[0] : lastPlayerPosition;
+        if(focusPoint) {
+            ctx.translate(-focusPoint.x, -focusPoint.y);
         }
         
         drawWorldBackground();
@@ -299,6 +287,12 @@
         particles.forEach(p => drawParticle(p));
         
         ctx.restore();
+
+        // Adiciona um filtro escuro quando o jogo termina
+        if(isGameOver) {
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        }
         
         updateLeaderboard();
         updateUI();
@@ -430,8 +424,10 @@
     }
 
     function updateCamera() {
-        if (!player) return;
-        const targetZoom = 1 - (player.body.length / 800);
+        if (player) {
+            lastPlayerPosition = { ...player.body[0] };
+        }
+        const targetZoom = player ? 1 - (player.body.length / 800) : camera.zoom;
         camera.zoom = (camera.zoom || 1) * 0.98 + targetZoom * 0.02;
     }
 
@@ -488,7 +484,7 @@
 
     function endGame(score) {
         isGameOver = true;
-        clearInterval(gameInterval);
+        // Não paramos o gameInterval para continuar a desenhar
         finalScoreElement.textContent = `Pontuação Final: ${score}`;
         gameOverMessage.classList.remove('hidden');
     }
@@ -528,6 +524,7 @@
             } else {
                 orientationMessage.style.display = 'none';
                 if (!gameInterval && !isGameOver) {
+                    // Reinicia o loop se ele tiver sido parado
                     gameInterval = setInterval(gameLoop, 1000 / 60);
                 }
             }
