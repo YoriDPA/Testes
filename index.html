@@ -119,7 +119,6 @@
         .message-box.hidden { display: none; }
         #orientation-message {
             display: none; /* Controlado por JS */
-            z-index: 300;
         }
         .mobile-controls {
             display: none; /* Controlado por JS */
@@ -360,6 +359,7 @@
             this.startMenu = document.getElementById('startMenu');
             this.playerNameInput = document.getElementById('playerNameInput');
             this.startButton = document.getElementById('startButton');
+            // ALTERAÇÃO: Removido pausa - Não inicializa elementos de pausa
         }
 
         startGame(playerName) {
@@ -469,7 +469,9 @@
             window.addEventListener('resize', () => { this.resizeCanvas(); this.checkOrientation(); });
             
             this.startButton.addEventListener('click', () => {
-                const playerName = this.playerNameInput.value.trim() || 'Jogador';
+                let playerName = this.playerNameInput.value.trim();
+                // ALTERAÇÃO: Validação aprimorada do nome (apenas alfanuméricos, máx. 10 chars)
+                playerName = playerName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10) || 'Jogador';
                 this.startGame(playerName);
             });
 
@@ -504,7 +506,6 @@
             }
         }
 
-        // --- MÉTODOS RESTANTES (sem alterações) ---
         handleInput() {
             if (!this.player) return;
             if (!CONFIG.IS_MOBILE) {
