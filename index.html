@@ -17,15 +17,21 @@
             font-family: 'Press Start 2P', cursive;
             background-color: var(--background-color);
             color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
             overflow: hidden;
             touch-action: none;
+            width: 100vw;
+            height: 100vh;
         }
         .game-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .game-container {
             position: relative;
             width: 100%;
             height: 100%;
@@ -33,33 +39,26 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 10px;
-        }
-        .game-container {
-            border: 4px solid var(--border-color);
-            border-radius: 10px;
-            box-shadow: 0 0 25px rgba(0, 255, 127, 0.5);
-            background-color: var(--container-bg);
-            padding: 10px;
-            width: 100%;
-            max-width: 640px;
-            display: flex;
-            flex-direction: column;
+            padding: 0;
         }
         canvas#gameCanvas {
             background-color: #000000;
             border: 2px solid var(--primary-color);
-            border-radius: 5px;
             width: 100%;
-            height: auto;
-            aspect-ratio: 1 / 1;
+            height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
         }
         .ui-panel {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            font-size: 0.8rem;
+            width: calc(100% - 2rem);
+            font-size: clamp(0.6rem, 2vw, 0.8rem);
+            z-index: 100;
         }
         .message-box {
             position: absolute;
@@ -68,7 +67,7 @@
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 20px;
+            padding: 1.5rem;
             border-radius: 10px;
             border: 2px solid var(--primary-color);
             text-align: center;
@@ -78,24 +77,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 1rem;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
         }
         #leaderboard {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 1rem;
+            right: 1rem;
             background-color: rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border-color);
             border-radius: 5px;
-            padding: 10px;
-            font-size: 0.7rem;
-            width: 180px;
+            padding: 0.5rem;
+            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
+            width: clamp(120px, 20vw, 180px);
             color: #ccc;
+            z-index: 100;
         }
         #leaderboard h3 {
-            margin: 0 0 10px 0;
+            margin: 0 0 0.5rem 0;
             color: var(--primary-color);
             text-align: center;
+            font-size: clamp(0.6rem, 1.8vw, 0.9rem);
         }
         #leaderboard ol {
             margin: 0;
@@ -105,56 +107,83 @@
         #leaderboard li {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 0.3rem;
         }
         #leaderboard li span:first-child {
             font-weight: bold;
             color: #fff;
         }
         #mobile-controls {
-            width: 100%;
-            margin-top: 15px;
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
             display: flex;
-            justify-content: space-between;
+            gap: 1rem;
             align-items: center;
+            z-index: 100;
         }
         #mobile-controls button {
             background-color: rgba(55, 65, 81, 0.7);
             border: 2px solid var(--border-color);
             color: white;
-            font-size: 2rem;
-            width: 70px;
-            height: 70px;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            width: clamp(50px, 15vw, 70px);
+            height: clamp(50px, 15vw, 70px);
             border-radius: 50%;
             user-select: none;
             -webkit-user-select: none;
         }
         #boost-btn {
-            font-size: 1.5rem;
-            width: 90px;
-            height: 90px;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            width: clamp(60px, 18vw, 90px);
+            height: clamp(60px, 18vw, 90px);
+        }
+        #joystick-area {
+            width: clamp(80px, 20vw, 100px);
+            height: clamp(80px, 20vw, 100px);
+            background: rgba(55, 65, 81, 0.7);
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
         }
         #joystick-area.active {
             box-shadow: 0 0 10px rgba(51, 255, 51, 0.8);
         }
+        #joystick {
+            width: clamp(32px, 8vw, 40px);
+            height: clamp(32px, 8vw, 40px);
+            background: #33ff33;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .controls {
+            position: absolute;
+            bottom: 1rem;
+            text-align: center;
+            font-size: clamp(0.5rem, 1.5vw, 0.7rem);
+            color: #ccc;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
-
 <div class="game-wrapper">
     <div class="game-container">
-        <h1 class="text-xl md:text-3xl text-center mb-2 text-[#33ff33]">SNAKE BATTLE</h1>
+        <h1 class="text-[clamp(1rem,4vw,1.5rem)] md:text-[clamp(1.5rem,6vw,2rem)] text-center absolute top-0 text-[#33ff33] z-10">SNAKE BATTLE</h1>
         <canvas id="gameCanvas"></canvas>
         <div class="ui-panel">
             <div>PONTOS: <span id="score">0</span></div>
             <div>VIVOS: <span id="snakes-alive">1</span></div>
         </div>
-        <div class="controls text-xs text-center mt-2 text-gray-400 hidden md:block">
-            Use as SETAS ◀ e ▶ para virar | ESPAÇO para acelerar
+        <div class="controls text-center text-gray-400 hidden md:block">
+            Use as SETAS ◄ e ► para virar | ESPAÇO para acelerar
         </div>
         <div id="mobile-controls" class="md:hidden">
-            <div id="joystick-area" style="width: 100px; height: 100px; background: rgba(55, 65, 81, 0.7); border-radius: 50%; position: relative; touch-action: none;">
-                <div id="joystick" style="width: 40px; height: 40px; background: #33ff33; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+            <div id="joystick-area">
+                <div id="joystick"></div>
             </div>
             <button id="boost-btn">⚡</button>
         </div>
@@ -250,9 +279,13 @@
     }
     
     function resizeCanvas() {
-        const size = canvas.clientWidth;
-        canvas.width = size;
-        canvas.height = size;
+        const dpr = window.devicePixelRatio || 1;
+        const size = Math.min(window.innerWidth, window.innerHeight);
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        canvas.style.width = `${size}px`;
+        canvas.style.height = `${size}px`;
+        ctx.scale(dpr, dpr);
     }
 
     function gameLoop() {
@@ -271,7 +304,7 @@
     // --- Desenho ---
     function drawGame() {
         ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
         drawWorldBackground();
@@ -321,7 +354,6 @@
     function handleInput() {
         if (!player) return;
         if (!isMobile) {
-            // Controles de teclado para desktop
             if (keys.ArrowLeft) player.angle -= player.turnSpeed;
             if (keys.ArrowRight) player.angle += player.turnSpeed;
         }
@@ -384,10 +416,11 @@
 
     function updateCamera() {
         if (!player) return;
-        camera.x = player.body[0].x - canvas.width / 2;
-        camera.y = player.body[0].y - canvas.height / 2;
-        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
-        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
+        const canvasSize = Math.min(window.innerWidth, window.innerHeight);
+        camera.x = player.body[0].x - canvasSize / 2;
+        camera.y = player.body[0].y - canvasSize / 2;
+        camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvasSize));
+        camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvasSize));
     }
 
     // --- Colisões, Morte e Fim de Jogo ---
@@ -397,13 +430,10 @@
             const currentSnake = allSnakes[i];
             if (!currentSnake) continue;
             const head = currentSnake.body[0];
-            const prevHead = currentSnake.body[1] || head;
-
             if (head.x < currentSnake.radius || head.x > WORLD_WIDTH - currentSnake.radius || head.y < currentSnake.radius || head.y > WORLD_HEIGHT - currentSnake.radius) {
                 killSnake(currentSnake);
                 continue;
             }
-
             for (let j = pellets.length - 1; j >= 0; j--) {
                 const p = pellets[j];
                 if (Math.hypot(head.x - p.x, head.y - p.y) < currentSnake.radius + p.radius) {
@@ -412,7 +442,6 @@
                     spawnPellet();
                 }
             }
-
             for (let j = 0; j < allSnakes.length; j++) {
                 const otherSnake = allSnakes[j];
                 if (!otherSnake) continue;
@@ -562,19 +591,28 @@
     function updateJoystick(touch) {
         const dx = touch.clientX - joystickCenter.x;
         const dy = touch.clientY - joystickCenter.y;
-        const distance = Math.min(40, Math.hypot(dx, dy));
+        const maxDistance = Math.min(window.innerWidth, window.innerHeight) * 0.08;
+        const distance = Math.min(maxDistance, Math.hypot(dx, dy));
         const angle = Math.atan2(dy, dx);
         const joystickX = distance * Math.cos(angle);
         const joystickY = distance * Math.sin(angle);
-        joystick.style.transform = `translate(${joystickX - 20}px, ${joystickY - 20}px)`;
-        if (player && distance > 10) {
+        const joystickSize = Math.min(window.innerWidth, window.innerHeight) * 0.032;
+        joystick.style.transform = `translate(${joystickX - joystickSize}px, ${joystickY - joystickSize}px)`;
+        if (player && distance > maxDistance * 0.25) {
             player.angle = angle;
         }
     }
 
-    restartButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', () => {
+        startGame();
+        if (isMobile && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => console.log(err));
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen().catch(err => console.log(err));
+        }
+    });
+
     startGame();
 </script>
-
 </body>
 </html>
