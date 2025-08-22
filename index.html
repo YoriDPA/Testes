@@ -7,13 +7,19 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="game">
+    <!-- NOVO: Tela de Menu Inicial -->
+    <div id="startMenu">
+        <h1>Snake Online</h1>
+        <input type="text" id="playerNameInput" placeholder="Digite seu nome" maxlength="15">
+        <button id="startButton">Jogar</button>
+    </div>
+
+    <div id="game" class="hidden">
         <canvas id="canvasHex" class="cnv"></canvas>
         <canvas id="canvasFood" class="cnv"></canvas>
         <canvas id="canvasSnake" class="cnv"></canvas>
     </div>
 
-    <!-- NOVO: Tela de Game Over -->
     <div id="gameOverScreen" class="hidden">
         <h1>Game Over</h1>
         <button id="restartButton">Jogar Novamente</button>
