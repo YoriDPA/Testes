@@ -1,24 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-	<title> Snake </title>
-	<link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake-Online</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body >
+<body>
+    <div id="game">
+        <canvas id="canvasHex" class="cnv"></canvas>
+        <canvas id="canvasFood" class="cnv"></canvas>
+        <canvas id="canvasSnake" class="cnv"></canvas>
+    </div>
 
-<div id="game">	
-	<canvas class="cnv" id="canvasSnake" height="400" width="800"></canvas>
-	<canvas class="cnv" id="canvasFood" height="400" width="800"></canvas>	
-	<canvas class="cnv" id="canvasHex" height="400" width="800"></canvas>	
-</div>
+    <!-- NOVO: Tela de Game Over -->
+    <div id="gameOverScreen" class="hidden">
+        <h1>Game Over</h1>
+        <button id="restartButton">Jogar Novamente</button>
+    </div>
 
-<script type="text/javascript" src="js/util.js"></script>
-<script type="text/javascript" src="js/point.js"></script>
-<script type="text/javascript" src="js/hexagon.js"></script>
-<script type="text/javascript" src="js/snake.js"></script>
-<script type="text/javascript" src="js/snakeai.js"></script>
-<script type="text/javascript" src="js/Food.js"></script>
-<script type="text/javascript" src="js/Game.js"></script>
-<script type="text/javascript" src="js/script.js"></script>
+    <script src="js/point.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/Food.js"></script>
+    <script src="js/snake.js"></script>
+    <script src="js/snakeai.js"></script>
+    <script src="js/Game.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
