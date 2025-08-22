@@ -1,34 +1,41 @@
-body{
-	text-align: center;
-	overflow: auto;
-	padding: 5px;
+/* Remove margens e paddings padrão do navegador e esconde a barra de rolagem */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    background-color: black; /* Define uma cor de fundo para a página inteira */
 }
 
-
-#game{	
-	position: relative;	
-	margin:0 auto;	
-	margin-top: 100px;		
+/* Faz o container do jogo ocupar toda a tela */
+#game {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
-.cnv{
-	position: absolute;
-	top: 0px;
-	left: 0px;	
-	border-style: solid;	
+/* Posiciona os canvas para sobrepor uns aos outros corretamente */
+.cnv {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* A largura e altura serão definidas via JavaScript */
+    border-style: none; /* Remove a borda que existia antes */
 }
 
-#canvasFood{
-	background-color: transparent;
-	z-index: 2;
+#canvasFood {
+    background-color: transparent;
+    z-index: 2;
 }
 
-#canvasHex{
-	background-color: black;
-	z-index: 1;	
+#canvasHex {
+    /* A cor de fundo do canvas de trás pode ser definida aqui se preferir */
+    background-color: transparent;
+    z-index: 1;
 }
 
-#canvasSnake{	
-	background-color: transparent;
-	z-index: 3;
+#canvasSnake {
+    background-color: transparent;
+    z-index: 3;
 }

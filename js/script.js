@@ -1,57 +1,72 @@
-var canvas = document.getElementById("canvasSnake");
-var ctxSnake = document.getElementById("canvasSnake").getContext("2d");
-var ctxFood = document.getElementById("canvasFood").getContext("2d");
-var ctxHex = document.getElementById("canvasHex").getContext("2d");
-var ut = new Util();
-var mouseDown = false,
-	cursor = new Point(0, 0);
-var game = new Game(ctxSnake, ctxFood, ctxHex);
+let mouse = new Point(window.innerWidth / 2, window.innerHeight / 2);
+let game;
 
-canvas.onmousemove = function(e){
-	if(mouseDown){		
-		cursor = ut.getMousePos(canvas, e);	
-		var ang = ut.getAngle(game.snakes[0].arr[0], cursor);				
-		game.snakes[0].changeAngle(ang);		
-	}
+window.onload = function() {
+    const canvasSnake = document.getElementById('canvasSnake');
+    const canvasFood = document.getElementById('canvasFood');
+    const canvasHex = document.getElementById('canvasHex');
+    if (!canvasSnake || !canvasFood || !canvasHex) {
+        console.error("Canvas elements not found");
+        return;
+    }
+    const ctxSnake = canvasSnake.getContext('2d');
+    const ctxFood = canvasFood.getContext('2d');
+    const ctxHex = canvasHex.getContext('2d');
+
+    const restartButton = document.getElementById('restartButton');
+    restartButton.addEventListener('click', function() {
+        if (game) {
+            game.init();
+        }
+    });
+
+    window.addEventListener('mousedown', function() {
+        if (game && game.snakes[0]) {
+            game.snakes[0].isBoosting = true;
+        }
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (game && game.snakes[0]) {
+            game.snakes[0].isBoosting = false;
+        }
+    });
+
+    window.addEventListener('mousemove', function(event) {
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+    });
+
+    function handleResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        canvasSnake.width = width;
+        canvasSnake.height = height;
+        canvasFood.width = width;
+        canvasFood.height = height;
+        canvasHex.width = width;
+        canvasHex.height = height;
+        if (game) game.resize(width, height);
+    }
+
+    function init() {
+        handleResize();
+        game = new Game(ctxSnake, ctxFood, ctxHex, window.innerWidth, window.innerHeight);
+        game.init();
+        animate();
+    }
+
+    function animate() {
+        ctxSnake.clearRect(0, 0, canvasSnake.width, canvasSnake.height);
+        ctxFood.clearRect(0, 0, canvasFood.width, canvasFood.height);
+        
+        if (game) {
+            game.draw();
+        }
+        
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', handleResize);
+    init();
 }
-
-canvas.onmousedown = function(e){
-	mouseDown = true;	
-}
-
-canvas.onmouseup = function(e){	
-	mouseDown = false;
-}
-
-function start(){	
-	game.init();
-	update();
-}
-
-
-var updateId,	
-previousDelta = 0,
-fpsLimit = 20;
-function update(currentDelta){
-	updateId = requestAnimationFrame(update);
-	var delta = currentDelta - previousDelta;
-    if (fpsLimit && delta < 1000 / fpsLimit) return;
-    previousDelta = currentDelta;
-
-    //clear all
-	ctxFood.clearRect(0, 0, canvas.width, canvas.height);
-	ctxSnake.clearRect(0, 0, canvas.width, canvas.height);
-	ctxHex.clearRect(0, 0, canvas.width, canvas.height);
-
-	//draw all
-	game.draw();	
-}
-
-
-start();
-
-
-
-
-
-

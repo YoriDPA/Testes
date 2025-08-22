@@ -1,143 +1,198 @@
-class Game{
-	constructor(ctxSnake, ctxFood, ctxHex){		
-		this.ctxSnake = ctxSnake;	
-		this.ctxFood = ctxFood;
-		this.ctxHex = ctxHex;
-		this.WORLD_SIZE = new Point(4000, 2000);		
-		this.SCREEN_SIZE = new Point(800, 400);
-		this.world = new Point(-1200, -600);						
-		this.snakes = [];		
-		this.foods = [];
-		this.bricks = [];		
-	}
+class Game {
+    constructor(ctxSnake, ctxFood, ctxHex, width, height) {
+        this.ctxSnake = ctxSnake;
+        this.ctxFood = ctxFood;
+        this.ctxHex = ctxHex;
+        this.WORLD_SIZE = new Point(4000, 2000);
+        this.SCREEN_SIZE = new Point(width, height);
+        this.world = new Point(0, 0); 
+        this.snakes = [];
+        this.foods = [];
+        this.stars = []; 
+        this.isGameOver = false;
+    }
 
-	init(){					
-		this.snakes[0] = new Snake(this.ctxSnake, "Bibhuti", 0);		
-		for(var i=0; i<10; i++) this.addSnake(ut.randomName(), 100);		
-		this.generateFoods(1000);			
-	}
+    init() {
+        this.isGameOver = false;
+        document.getElementById('gameOverScreen').classList.add('hidden');
+        this.snakes = [];
+        this.foods = [];
+        
+        if (this.stars.length === 0) {
+            this.generateStars(500); 
+        }
 
-	draw(){		
+        this.snakes[0] = new Snake(this.ctxSnake, "Player 1", 0);
+        this.snakes[0].pos = new Point(this.WORLD_SIZE.x / 2, this.WORLD_SIZE.y / 2);
 
-		//draw world
-		this.drawWorld();
+        for (var i = 0; i < 15; i++) this.addSnake(ut.randomName(), i + 1);
+        this.generateFoods(1000);
+    }
 
-		//draw bricks
-		// this.drawBricks();			
+    generateStars(count) {
+        for (let i = 0; i < count; i++) {
+            this.stars.push({
+                pos: new Point(ut.random(0, this.WORLD_SIZE.x), ut.random(0, this.WORLD_SIZE.y)),
+                size: ut.random(1, 3)
+            });
+        }
+    }
 
-		// move yourself
-		if(this.snakes[0].state === 0)
-			this.snakes[0].move();
+    resize(width, height) {
+        this.SCREEN_SIZE.x = width;
+        this.SCREEN_SIZE.y = height;
+    }
 
-		//move other snakes
-		for(var i=1; i<this.snakes.length; i++)
-		if(this.snakes[i].state === 0) this.snakes[i].move(this.snakes[0]);		
+    draw() {
+        if (this.isGameOver) {
+            return;
+        }
 
-		//draw food
-		for(var i=0; i<this.foods.length; i++) this.foods[i].draw(this.snakes[0]);			
-		
-		//draw Score
-		this.drawScore();
+        const player = this.snakes[0];
+        
+        for (let i = 0; i < this.snakes.length; i++) {
+            if (this.snakes[i].state === 0) {
+                this.snakes[i].move();
+            }
+        }
 
-		//draw map
-		this.drawMap();
-	}
+        for (let i = 0; i < this.snakes.length; i++) {
+            if (this.snakes[i].state === 0) {
+                for (let j = 0; j < this.snakes.length; j++) {
+                    this.snakes[i].checkSnakeCollision(this.snakes[j]);
+                }
+            }
+        }
 
-	drawWorld(){
-				
-		this.ctxHex.fillStyle = "white";
-		this.ctxHex.fillRect(this.world.x - 2, this.world.y - 2, this.WORLD_SIZE.x+4, this.WORLD_SIZE.y+4);
+        if (player.state === 1) {
+            this.gameOver();
+            return;
+        }
 
-		this.ctxHex.fillStyle = "#17202A";
-		this.ctxHex.fillRect(this.world.x, this.world.y, this.WORLD_SIZE.x, this.WORLD_SIZE.y);
+        for (let i = this.snakes.length - 1; i >= 1; i--) {
+            if (this.snakes[i].state === 1) {
+                this.snakes.splice(i, 1);
+            }
+        }
+        
+        this.world.x = -player.pos.x + this.SCREEN_SIZE.x / 2;
+        this.world.y = -player.pos.y + this.SCREEN_SIZE.y / 2;
 
-		this.world.x -= this.snakes[0].velocity.x;
-		this.world.y -= this.snakes[0].velocity.y;
-	}
+        this.drawWorld();
 
-	drawScore(){
-		var start = new Point(20, 20);
-		for (var i = 0; i < this.snakes.length; i++) {			
-			this.ctxSnake.fillStyle = this.snakes[i].mainColor;
-			this.ctxSnake.font="bold 10px Arial";
-			this.ctxSnake.fillText(this.snakes[i].name + ":" + this.snakes[i].score,
-			start.x-5, start.y +i*15);		
-		}
-	}
+        for (let i = 0; i < this.snakes.length; i++) {
+            if (this.snakes[i].state === 0) {
+                this.snakes[i].draw();
+            }
+        }
+        for (let i = 0; i < this.foods.length; i++) {
+            this.foods[i].draw();
+        }
 
-	drawMap(){
+        this.drawScore();
+        this.drawMap();
+    }
 
-		this.ctxSnake.globalAlpha = 0.5;
+    gameOver() {
+        this.isGameOver = true;
+        document.getElementById('gameOverScreen').classList.remove('hidden');
+    }
 
-		var mapSize = new Point(100, 50);
-		var start = new Point(20, this.SCREEN_SIZE.y-mapSize.y-10);
-		this.ctxSnake.fillStyle = "white";		
-		this.ctxSnake.fillRect(start.x, start.y, mapSize.x,  mapSize.y);
-		this.ctxSnake.fill();
+    drawWorld() {
+        this.ctxHex.save();
+        this.ctxHex.fillStyle = "#0D1117"; 
+        this.ctxHex.fillRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
+        
+        this.ctxHex.fillStyle = "white";
+        for (const star of this.stars) {
+            const drawX = star.pos.x + this.world.x;
+            const drawY = star.pos.y + this.world.y;
+            if (drawX > 0 && drawX < this.SCREEN_SIZE.x && drawY > 0 && drawY < this.SCREEN_SIZE.y) {
+                 this.ctxHex.beginPath();
+                 this.ctxHex.arc(drawX, drawY, star.size / 2, 0, 2 * Math.PI);
+                 this.ctxHex.fill();
+            }
+        }
 
-		this.ctxSnake.globalAlpha = 1;
-		
+        this.ctxHex.strokeStyle = "#21262D"; 
+        this.ctxHex.lineWidth = 1;
+        const gridSize = 50;
+        
+        const startX = this.world.x % gridSize;
+        const startY = this.world.y % gridSize;
 
-		//draw all player in map	
-		for (var i = 0; i < this.snakes.length; i++) {
-			var playerInMap = new Point(start.x + (mapSize.x/this.WORLD_SIZE.x) * this.snakes[i].pos.x,
-			start.y + (mapSize.y/this.WORLD_SIZE.y) * this.snakes[i].pos.y);
+        for(let x = startX; x < this.SCREEN_SIZE.x; x += gridSize) {
+            this.ctxHex.beginPath();
+            this.ctxHex.moveTo(x, 0);
+            this.ctxHex.lineTo(x, this.SCREEN_SIZE.y);
+            this.ctxHex.stroke();
+        }
 
-			// console.log(playerInMap);
-			this.ctxSnake.fillStyle = this.snakes[i].mainColor;
-			this.ctxSnake.beginPath();
-			this.ctxSnake.arc(start.x + playerInMap.x, playerInMap.y + 10, 2, 0, 2*Math.PI);
-			this.ctxSnake.fill();
-		}	
+        for(let y = startY; y < this.SCREEN_SIZE.y; y += gridSize) {
+            this.ctxHex.beginPath();
+            this.ctxHex.moveTo(0, y);
+            this.ctxHex.lineTo(this.SCREEN_SIZE.x, y);
+            this.ctxHex.stroke();
+        }
 
-		
-	}
+        this.ctxHex.strokeStyle = "#E74C3C";
+        this.ctxHex.lineWidth = 10;
+        this.ctxHex.strokeRect(this.world.x, this.world.y, this.WORLD_SIZE.x, this.WORLD_SIZE.y);
 
-	// drawBricks(){
-	// 	var size = 50;		
-	// 	for(var i=0; i<this.bricks.length; i++){			
-	// 		 ut.drawHexagon(this.ctxHex, 22, this.bricks[i].x + size/2, this.bricks[i].y + size/2);	
-	// 		this.bricks[i].x -= this.snakes[0].velocity.x;
-	// 		this.bricks[i].y -= this.snakes[0].velocity.y;
+        this.ctxHex.restore();
+    }
 
-	// 		// this.ctxHex.fillStyle = "#2C3E50";
-	// 		// this.ctxHex.fillRect(this.bricks[i].x + 5, this.bricks[i].y + 5, 40, 40);
+    drawScore() {
+        const start = new Point(20, 30);
+        const sortedSnakes = [...this.snakes].sort((a, b) => b.score - a.score).slice(0, 10);
 
-	// 		//left
-	// 		if(this.bricks[i].x + size < 0)this.bricks[i].x = this.SCREEN_SIZE.x;
-	// 		//right
-	// 		else if(this.bricks[i].x > this.SCREEN_SIZE.x)this.bricks[i].x = -size;
-	// 		//up
-	// 		else if(this.bricks[i].y + size < 0)this.bricks[i].y = this.SCREEN_SIZE.y;
-	// 		//down
-	// 		else if(this.bricks[i].y > this.SCREEN_SIZE.y)this.bricks[i].y = -size;
-	// 	}
-	// }
+        this.ctxSnake.fillStyle = "white";
+        this.ctxSnake.font = "bold 16px Arial";
+        this.ctxSnake.fillText("Leaderboard", start.x, start.y - 10);
 
-	
-	addSnake(name, id){
+        for (let i = 0; i < sortedSnakes.length; i++) {
+            const snake = sortedSnakes[i];
+            this.ctxSnake.fillStyle = snake.mainColor;
+            this.ctxSnake.font = "bold 14px Arial";
+            this.ctxSnake.fillText(`${i+1}. ${snake.name}: ${snake.score}`, start.x, start.y + i * 20);
+        }
+    }
 
-		this.snakes.push(new SnakeAi(this.ctxSnake, name, id))
-	}
+    drawMap() {
+        this.ctxSnake.globalAlpha = 0.7;
+        const mapSize = new Point(150, 75);
+        const start = new Point(this.SCREEN_SIZE.x - mapSize.x - 20, this.SCREEN_SIZE.y - mapSize.y - 20);
+        
+        this.ctxSnake.fillStyle = "rgba(255, 255, 255, 0.2)";
+        this.ctxSnake.strokeStyle = "white";
+        this.ctxSnake.lineWidth = 2;
+        this.ctxSnake.fillRect(start.x, start.y, mapSize.x, mapSize.y);
+        this.ctxSnake.strokeRect(start.x, start.y, mapSize.x, mapSize.y);
+        
+        this.ctxSnake.globalAlpha = 1;
+        for (let i = 0; i < this.snakes.length; i++) {
+            const snake = this.snakes[i];
+            const playerInMap = new Point(
+                start.x + (mapSize.x / this.WORLD_SIZE.x) * snake.pos.x,
+                start.y + (mapSize.y / this.WORLD_SIZE.y) * snake.pos.y
+            );
+            this.ctxSnake.fillStyle = snake.id === 0 ? "white" : snake.mainColor;
+            this.ctxSnake.beginPath();
+            this.ctxSnake.arc(playerInMap.x, playerInMap.y, 3, 0, 2 * Math.PI);
+            this.ctxSnake.fill();
+        }
+    }
 
-	generateFoods(n){
-		for(var i=0; i<n; i++){			
-			this.foods.push(new Food(this.ctxFood, ut.random(-1200 +  50, 2800 - 50),
-			ut.random(-600 + 50, 1400 - 50)));
-		}
-	}
+    addSnake(name, id) {
+        this.snakes.push(new SnakeAi(this.ctxSnake, name, id));
+    }
 
-	// generateBricks(){
-	// 	var size = 50;
-	// 	var inRows = this.SCREEN_SIZE.x/size + 2;
-	// 	var inCols = this.SCREEN_SIZE.y/size + 2;
-	// 	var start = new Point(-size, -size);
-	// 	for(var i=0; i<inRows; i++){
-	// 		for(var j=0; j<inCols; j++){
-	// 			var point = new Point(start.x + i*size, start.y + j*size);				
-	// 			this.bricks.push(point);
-	// 		}
-	// 	}
-	// }
-
+    generateFoods(n) {
+        for (var i = 0; i < n; i++) {
+            this.foods.push(new Food(this.ctxFood, 
+                ut.random(0, this.WORLD_SIZE.x),
+                ut.random(0, this.WORLD_SIZE.y)
+            ));
+        }
+    }
 }
