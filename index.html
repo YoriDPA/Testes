@@ -1,36 +1,39 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake-Online</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Online</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- NOVO: Tela de Menu Inicial -->
-    <div id="startMenu">
-        <h1>Snake Online</h1>
-        <input type="text" id="playerNameInput" placeholder="Digite seu nome" maxlength="15">
-        <button id="startButton">Jogar</button>
-    </div>
+  <div id="game">
+    <canvas id="canvasHex" class="cnv"></canvas>
+    <canvas id="canvasFood" class="cnv"></canvas>
+    <canvas id="canvasSnake" class="cnv"></canvas>
+  </div>
 
-    <div id="game" class="hidden">
-        <canvas id="canvasHex" class="cnv"></canvas>
-        <canvas id="canvasFood" class="cnv"></canvas>
-        <canvas id="canvasSnake" class="cnv"></canvas>
-    </div>
+  <!-- Tela inicial -->
+  <div id="startScreen">
+    <h1>Snake Online</h1>
+    <input type="text" id="playerNameInput" placeholder="Digite seu nome" maxlength="12" />
+    <button id="startButton" type="button">Iniciar Jogo</button>
+  </div>
 
-    <div id="gameOverScreen" class="hidden">
-        <h1>Game Over</h1>
-        <button id="restartButton">Jogar Novamente</button>
-    </div>
+  <!-- Tela de Game Over -->
+  <div id="gameOverScreen" class="hidden">
+    <h1>Game Over</h1>
+    <p id="finalScore">Score: 0</p>
+    <button id="restartButton" type="button">Jogar Novamente</button>
+  </div>
 
-    <script src="js/point.js"></script>
-    <script src="js/util.js"></script>
-    <script src="js/Food.js"></script>
-    <script src="js/snake.js"></script>
-    <script src="js/snakeai.js"></script>
-    <script src="js/Game.js"></script>
-    <script src="js/script.js"></script>
+  <!-- Scripts na ordem correta -->
+  <script src="js/point.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/Food.js"></script>
+  <script src="js/snake_new.js"></script>
+  <script src="js/snakeai.js"></script>
+  <script src="js/Game.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>
