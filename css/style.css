@@ -1,41 +1,60 @@
-/* Remove margens e paddings padrão do navegador e esconde a barra de rolagem */
 html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-    background-color: black; /* Define uma cor de fundo para a página inteira */
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  background-color: black;
 }
 
-/* Faz o container do jogo ocupar toda a tela */
 #game {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-/* Posiciona os canvas para sobrepor uns aos outros corretamente */
 .cnv {
-    position: absolute;
-    top: 0;
-    left: 0;
-    /* A largura e altura serão definidas via JavaScript */
-    border-style: none; /* Remove a borda que existia antes */
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-style: none;
 }
 
-#canvasFood {
-    background-color: transparent;
-    z-index: 2;
+#startScreen, #gameOverScreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  font-family: Arial, sans-serif;
+  z-index: 20;
 }
 
-#canvasHex {
-    /* A cor de fundo do canvas de trás pode ser definida aqui se preferir */
-    background-color: transparent;
-    z-index: 1;
+.hidden { display: none; }
+
+#startScreen input {
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 14px;
+  border-radius: 5px;
+  border: none;
+  width: 200px;
+  text-align: center;
 }
 
-#canvasSnake {
-    background-color: transparent;
-    z-index: 3;
+#startScreen button, #gameOverScreen button {
+  background: #28B463;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+}
+#startScreen button:hover, #gameOverScreen button:hover {
+  background: #1D8348;
 }

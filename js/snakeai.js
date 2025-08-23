@@ -1,47 +1,50 @@
-class SnakeAi extends Snake {
-     constructor(ctx, name, id) {
+class SnakeAi extends SnakePlayer {
+    constructor(ctx, name, id) {
         super(ctx, name, id);
-        this.pos = new Point(ut.random(50, game.WORLD_SIZE.x - 50), ut.random(50, game.WORLD_SIZE.y - 50));
-        this.speed = ut.random(1, 2); // << VELOCIDADE DA IA REDUZIDA NOVAMENTE
+
+        // spawn aleatório, longe da borda
+        const margin = 60;
+        const rx = ut.random(margin, game.WORLD_SIZE.x - margin);
+        const ry = ut.random(margin, game.WORLD_SIZE.y - margin);
+
+        this.pos = new Point(rx, ry);
+        this.parts = [new Point(this.pos.x, this.pos.y)];
+        this.state = 0;
+
+        this.speed = this.normalSpeed;
+        this.angle = Math.random() * Math.PI * 2;
         this.target = null;
-     }
+    }
 
-     findClosestFood() {
-        let closestFood = null;
-        let minDistance = Infinity;
+    move() {
+        if (this.state === 1) return;
 
-        for(const food of game.foods) {
-            const distance = ut.getDistance(this.pos, food.pos);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestFood = food;
-            }
+        // leve aleatoriedade na direção
+        if (Math.random() < 0.03) {
+            this.angle += (Math.random() - 0.5) * 0.6;
         }
-        return closestFood;
-     }
 
-     move() {
-        const worldSize = game.WORLD_SIZE;
-        const margin = 50; // Margem para a IA virar antes de bater na parede
+        this.velocity.x = this.speed * Math.cos(this.angle);
+        this.velocity.y = this.speed * Math.sin(this.angle);
 
-        // << NOVO: LÓGICA PARA A IA MUDAR DE DIREÇÃO PERTO DA BORDA
-        if (this.pos.x < margin || this.pos.x > worldSize.x - margin || 
-            this.pos.y < margin || this.pos.y > worldSize.y - margin) {
-            // Se a IA está perto da borda, faz ela mirar no centro do mapa
-            this.angle = ut.getAngle(this.pos, new Point(worldSize.x / 2, worldSize.y / 2));
-        } else {
-            // Comportamento normal de procurar comida
-            if (!this.target || this.target.state === 1) {
-                this.target = this.findClosestFood();
-            }
-            
-            if (this.target) {
-                this.angle = ut.getAngle(this.pos, this.target.pos);
-            } else {
-                this.angle += ut.random(-1, 1) * 0.1;
-            }
+        this.pos.x += this.velocity.x;
+        this.pos.y += this.velocity.y;
+
+        // ✅ colisão com parede = morte
+        const half = this.size / 2;
+        if (
+            this.pos.x < half ||
+            this.pos.x > game.WORLD_SIZE.x - half ||
+            this.pos.y < half ||
+            this.pos.y > game.WORLD_SIZE.y - half
+        ) {
+            this.die();
+            return;
         }
-        
-        super.move();
-     }
+
+        this.parts.unshift(new Point(this.pos.x, this.pos.y));
+        if (this.parts.length > this.maxParts) this.parts.pop();
+
+        this.checkFoodCollision();
+    }
 }
