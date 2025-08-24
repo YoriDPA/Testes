@@ -37,12 +37,31 @@ window.onload = function () {
     }
 
     async function startGame() {
-        const playerName = nameInput.value.trim() || "Anônimo";
-        startScreen.style.display = "none";
+        const playerName = nameInput.value.trim();
+        if (!playerName) {
+            alert("Por favor, introduza um nome.");
+            return;
+        }
 
-        handleResize();
+        // Desativa o botão para evitar cliques duplos e dar feedback ao utilizador
+        startButton.disabled = true;
+        startButton.textContent = "A verificar...";
 
         try {
+            // 1. Verifica se o nome já está em uso no Firebase
+            const querySnapshot = await playersRef.where("name", "==", playerName).get();
+
+            if (!querySnapshot.empty) {
+                // Se a query não for vazia, o nome já existe
+                alert("Este nome já está em uso. Por favor, escolha outro.");
+                startScreen.style.display = "block"; // Mostra a tela inicial novamente
+                return; // Para a execução da função
+            }
+
+            // 2. Se o nome estiver livre, continua o processo normal
+            startScreen.style.display = "none";
+            handleResize();
+
             const newPlayerRef = await playersRef.add({
                 name: playerName,
                 color: ut.randomColor(),
@@ -65,6 +84,10 @@ window.onload = function () {
             console.error("Erro ao iniciar o jogo:", error);
             startScreen.style.display = "block";
             alert("Não foi possível conectar ao servidor. Tente novamente.");
+        } finally {
+            // Garante que o botão é reativado mesmo que ocorra um erro
+            startButton.disabled = false;
+            startButton.textContent = "Iniciar Jogo";
         }
     }
 
