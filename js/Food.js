@@ -6,14 +6,17 @@ class Food {
     this.color = ut.randomColor();
   }
 
-  draw() {
+  // O método draw agora recebe a posição do mundo como um parâmetro
+  draw(world) {
     this.ctx.beginPath();
     this.ctx.fillStyle = this.color;
-    this.ctx.arc(this.pos.x + game.world.x, this.pos.y + game.world.y, this.size, 0, 2 * Math.PI);
+    // Usa o 'world' recebido para calcular a posição correta no ecrã
+    this.ctx.arc(this.pos.x + world.x, this.pos.y + world.y, this.size, 0, 2 * Math.PI);
     this.ctx.fill();
   }
 
   die() {
+    // A variável global 'game' ainda é usada aqui, o que é aceitável por agora.
     const index = game.foods.indexOf(this);
     if (index > -1) game.foods.splice(index, 1);
   }

@@ -4,39 +4,56 @@ class Game {
         this.ctxFood = ctxFood;
         this.ctxHex = ctxHex;
 
-        this.WORLD_SIZE = new Point(4000, 2000);   // tamanho do mundo
+        this.WORLD_SIZE = new Point(4000, 2000);
         this.SCREEN_SIZE = new Point(width, height);
-        this.world = new Point(0, 0); 
+        this.world = new Point(0, 0);
 
-        this.snakes = [];
+        this.snakes = {};
         this.foods = [];
         this.isGameOver = false;
 
+        this.playerId = null;
+        this.playerSnake = null;
+
         this.lastFrameTime = performance.now();
         this.fps = 0;
+
+        // Configurações do fundo e da grade
+        this.backgroundColor = '#222222';
+        this.gridSize = 40;
+        this.gridColor = '#333333';
     }
 
-    init() {
+    init(playerId, playerName) {
         this.isGameOver = false;
         document.getElementById('gameOverScreen').classList.add('hidden');
         document.getElementById('finalScore').innerText = "Score: 0";
 
-        this.snakes = [];
-        this.foods = [];
+        this.playerId = playerId;
+        this.snakes = {};
 
-        // cria o jogador
-        this.snakes[0] = new SnakePlayer(this.ctxSnake, "Player 1", 0);
-        this.snakes[0].pos = new Point(this.WORLD_SIZE.x / 2, this.WORLD_SIZE.y / 2);
-        this.snakes[0].parts = [new Point(this.snakes[0].pos.x, this.snakes[0].pos.y)];
-        this.snakes[0].state = 0;   // ✅ jogador começa vivo
-
-        // adiciona IAs
-        for (let i = 0; i < 10; i++) {
-            this.addSnake(ut.randomName(), i + 1);
-        }
-
-        // adiciona comidas
         this.generateFoods(300);
+    }
+
+    updateAllSnakes(playersData) {
+        for (const id in playersData) {
+            const data = playersData[id];
+            if (!this.snakes[id]) {
+                this.snakes[id] = new SnakePlayer(this.ctxSnake, data.name, id);
+            }
+            const snake = this.snakes[id];
+            snake.parts = data.parts.map(p => new Point(p.x, p.y));
+            snake.pos = new Point(snake.parts[0].x, snake.parts[0].y);
+            snake.score = data.score;
+            snake.color = data.color;
+            snake.isBoosting = data.isBoosting;
+        }
+        for (const id in this.snakes) {
+            if (!playersData[id]) {
+                delete this.snakes[id];
+            }
+        }
+        this.playerSnake = this.snakes[this.playerId];
     }
 
     resize(width, height) {
@@ -44,91 +61,91 @@ class Game {
         this.SCREEN_SIZE.y = height;
     }
 
-    draw() {
-        const player = this.snakes[0];
+    draw(mouse) {
+        if (!this.playerSnake) return;
 
-        // FPS
         const now = performance.now();
         const delta = (now - this.lastFrameTime) / 1000;
         this.lastFrameTime = now;
         this.fps = Math.round(1 / delta);
 
-        // limpa canvases
         this.ctxSnake.clearRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
         this.ctxFood.clearRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
-        this.ctxHex.clearRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
 
-        if (this.isGameOver) {
-            this.drawWorld();
-            for (let snake of this.snakes) if (snake.state === 0) snake.draw();
-            for (let food of this.foods) food.draw();
-            this.drawScore();
-            return;
-        }
+        this.playerSnake.move(mouse);
 
-        // movimento de todas as cobras
-        for (let snake of this.snakes) {
-            if (snake.state === 0) snake.move();
-        }
-
-        // checagem de colisões entre cobras
-        for (let i = 0; i < this.snakes.length; i++) {
-            if (this.snakes[i].state === 0) {
-                for (let j = 0; j < this.snakes.length; j++) {
-                    this.snakes[i].checkSnakeCollision(this.snakes[j]);
-                }
-            }
-        }
-
-        // se o player morreu → game over
-        if (player.state === 1) {
+        if (this.playerSnake.state === 1) {
             this.gameOver();
         }
 
-        // movimenta o mundo em relação ao jogador
-        this.world.x = -player.pos.x + this.SCREEN_SIZE.x / 2;
-        this.world.y = -player.pos.y + this.SCREEN_SIZE.y / 2;
+        this.world.x = -this.playerSnake.pos.x + this.SCREEN_SIZE.x / 2;
+        this.world.y = -this.playerSnake.pos.y + this.SCREEN_SIZE.y / 2;
 
-        // desenha tudo
-        this.drawWorld();
-        for (let snake of this.snakes) if (snake.state === 0) snake.draw();
-        for (let food of this.foods) food.draw();
+        // Desenha o fundo, a grade e a borda
+        this.drawBackgroundAndGrid();
+        this.drawWorldBorder();
+
+        for (const id in this.snakes) {
+            this.snakes[id].draw(this.world);
+        }
+        for (let food of this.foods) {
+            food.draw(this.world);
+        }
         this.drawScore();
+    }
+
+    // NOVA FUNÇÃO para desenhar o fundo e a grade
+    drawBackgroundAndGrid() {
+        const worldOffset = this.world;
+        const startX = worldOffset.x % this.gridSize;
+        const startY = worldOffset.y % this.gridSize;
+
+        this.ctxHex.fillStyle = this.backgroundColor;
+        this.ctxHex.fillRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
+
+        this.ctxHex.strokeStyle = this.gridColor;
+        this.ctxHex.lineWidth = 1;
+        this.ctxHex.beginPath();
+
+        for (let x = startX; x <= this.SCREEN_SIZE.x; x += this.gridSize) {
+            this.ctxHex.moveTo(x, 0);
+            this.ctxHex.lineTo(x, this.SCREEN_SIZE.y);
+        }
+        for (let y = startY; y <= this.SCREEN_SIZE.y; y += this.gridSize) {
+            this.ctxHex.moveTo(0, y);
+            this.ctxHex.lineTo(this.SCREEN_SIZE.x, y);
+        }
+        this.ctxHex.stroke();
+    }
+
+    // Função renomeada e simplificada para desenhar apenas a borda
+    drawWorldBorder() {
+        this.ctxHex.save();
+        this.ctxHex.strokeStyle = "#E74C3C";
+        this.ctxHex.lineWidth = 10;
+        this.ctxHex.strokeRect(this.world.x, this.world.y, this.WORLD_SIZE.x, this.WORLD_SIZE.y);
+        this.ctxHex.restore();
     }
 
     gameOver() {
         if (!this.isGameOver) {
             this.isGameOver = true;
-            const playerScore = this.snakes[0].score;
+            const playerScore = this.playerSnake.score;
             const screen = document.getElementById('gameOverScreen');
             screen.classList.remove('hidden');
             document.getElementById('finalScore').innerText = `Score: ${playerScore}`;
+            if (playerRef) {
+                playerRef.delete();
+            }
         }
     }
 
-    drawWorld() {
-        this.ctxHex.save();
-        this.ctxHex.fillStyle = "#0D1117";
-        this.ctxHex.fillRect(0, 0, this.SCREEN_SIZE.x, this.SCREEN_SIZE.y);
-
-        // borda do mundo
-        this.ctxHex.strokeStyle = "#E74C3C";
-        this.ctxHex.lineWidth = 10;
-        this.ctxHex.strokeRect(this.world.x, this.world.y, this.WORLD_SIZE.x, this.WORLD_SIZE.y);
-
-        this.ctxHex.restore();
-    }
-
     drawScore() {
-        const player = this.snakes[0];
+        if (!this.playerSnake) return;
         this.ctxSnake.fillStyle = "white";
         this.ctxSnake.font = "14px Arial";
-        this.ctxSnake.fillText(`Score: ${player.score}`, 20, 20);
+        this.ctxSnake.fillText(`Score: ${this.playerSnake.score}`, 20, 20);
         this.ctxSnake.fillText(`FPS: ${this.fps}`, 20, 40);
-    }
-
-    addSnake(name, id) {
-        this.snakes.push(new SnakeAi(this.ctxSnake, name, id));
     }
 
     generateFoods(n) {
