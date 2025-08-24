@@ -1,33 +1,51 @@
+// Objeto para agrupar funções utilitárias
 const ut = {
-  random(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  },
-  randomColor() {
-    const colors = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F6"];
-    return colors[Math.floor(Math.random() * colors.length)];
-  },
-  color(hex, lum) {
-    hex = String(hex).replace(/[^0-9a-f]/gi, "");
-    if (hex.length < 6) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-    lum = lum || 0;
-    let rgb = "#", c, i;
-    for (i = 0; i < 3; i++) {
-      c = parseInt(hex.substr(i*2,2), 16);
-      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-      rgb += ("00"+c).substr(c.length);
+    // Gera um número aleatório num intervalo
+    random: function(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    // Gera uma cor hexadecimal aleatória
+    randomColor: function() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    },
+
+    // Escurece ou clareia uma cor hexadecimal
+    color: function(color, percent) {
+        let f = parseInt(color.slice(1), 16),
+            t = percent < 0 ? 0 : 255,
+            p = percent < 0 ? percent * -1 : percent,
+            R = f >> 16,
+            G = (f >> 8) & 0x00ff,
+            B = f & 0x0000ff;
+        return (
+            "#" +
+            (
+                0x1000000 +
+                (Math.round((t - R) * p) + R) * 0x10000 +
+                (Math.round((t - G) * p) + G) * 0x100 +
+                (Math.round((t - B) * p) + B)
+            )
+            .toString(16)
+            .slice(1)
+        );
+    },
+
+    // Calcula o ângulo entre dois pontos
+    getAngle: function(p1, p2) {
+        return Math.atan2(p2.y - p1.y, p2.x - p1.x);
+    },
+
+    // Verifica a colisão entre dois círculos
+    cirCollision: function(x1, y1, r1, x2, y2, r2) {
+        const dx = x1 - x2;
+        const dy = y1 - y2;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < r1 + r2;
     }
-    return rgb;
-  },
-  getAngle(p1, p2) {
-    return Math.atan2(p2.y - p1.y, p2.x - p1.x);
-  },
-  cirCollision(x1,y1,r1,x2,y2,r2) {
-    const dx = x1 - x2, dy = y1 - y2;
-    const distance = Math.sqrt(dx*dx + dy*dy);
-    return distance < r1 + r2;
-  },
-  randomName() {
-    const names = ["john","david","geeta","ram","hari","peter","abc-123","shyam"];
-    return names[Math.floor(Math.random() * names.length)];
-  }
 };

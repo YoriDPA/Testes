@@ -18,7 +18,6 @@ class Game {
         this.lastFrameTime = performance.now();
         this.fps = 0;
 
-        // Configurações do fundo e da grade
         this.backgroundColor = '#222222';
         this.gridSize = 40;
         this.gridColor = '#333333';
@@ -74,6 +73,10 @@ class Game {
 
         this.playerSnake.move(mouse);
 
+        // --- CORREÇÃO DA COLISÃO ---
+        // Verifica as colisões do nosso jogador
+        this.checkPlayerCollisions();
+
         if (this.playerSnake.state === 1) {
             this.gameOver();
         }
@@ -81,7 +84,6 @@ class Game {
         this.world.x = -this.playerSnake.pos.x + this.SCREEN_SIZE.x / 2;
         this.world.y = -this.playerSnake.pos.y + this.SCREEN_SIZE.y / 2;
 
-        // Desenha o fundo, a grade e a borda
         this.drawBackgroundAndGrid();
         this.drawWorldBorder();
 
@@ -94,7 +96,31 @@ class Game {
         this.drawScore();
     }
 
-    // NOVA FUNÇÃO para desenhar o fundo e a grade
+    // --- NOVA FUNÇÃO DE COLISÃO ---
+    checkPlayerCollisions() {
+        if (!this.playerSnake || this.playerSnake.state === 1) return;
+
+        // Percorre todas as cobras no jogo
+        for (const id in this.snakes) {
+            const otherSnake = this.snakes[id];
+
+            // Ignora a verificação contra si mesmo
+            if (id === this.playerId) continue;
+
+            // Verifica se a cabeça do nosso jogador colide com o corpo de outra cobra
+            for (let i = 0; i < otherSnake.parts.length; i++) {
+                const part = otherSnake.parts[i];
+                if (ut.cirCollision(
+                    this.playerSnake.pos.x, this.playerSnake.pos.y, this.playerSnake.size / 2,
+                    part.x, part.y, otherSnake.size / 2
+                )) {
+                    this.playerSnake.die();
+                    return; // Sai da função assim que uma colisão é detetada
+                }
+            }
+        }
+    }
+
     drawBackgroundAndGrid() {
         const worldOffset = this.world;
         const startX = worldOffset.x % this.gridSize;
@@ -118,7 +144,6 @@ class Game {
         this.ctxHex.stroke();
     }
 
-    // Função renomeada e simplificada para desenhar apenas a borda
     drawWorldBorder() {
         this.ctxHex.save();
         this.ctxHex.strokeStyle = "#E74C3C";
