@@ -2,8 +2,10 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- A meta tag viewport foi atualizada para uma melhor experiência móvel -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Snake Online</title>
+  <!-- Ligação para o novo ficheiro de estilos -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,6 +14,10 @@
     <canvas id="canvasFood" class="cnv"></canvas>
     <canvas id="canvasSnake" class="cnv"></canvas>
   </div>
+
+  <!-- Controles para Dispositivos Móveis -->
+  <div id="joystick-container"></div>
+  <div id="boost-button"></div>
 
   <!-- Tela inicial -->
   <div id="startScreen">
@@ -30,6 +36,9 @@
   <!-- Scripts do Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Biblioteca do Joystick -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 
   <!-- Script de configuração do Firebase -->
   <script src="js/firebase-config.js"></script>
